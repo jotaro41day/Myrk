@@ -1,0 +1,8 @@
+fn main() -> i32 {
+    buffer x: f32[1024];
+    for i in 0..1024 { x[i] = 2.0f32; }
+    var total: f32 = 0.0f32;
+    for i in 0..1024 { total = total + x[i]; }
+    print(total);
+    return 0;
+}

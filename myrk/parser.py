@@ -69,6 +69,15 @@ class Parser:
         if token.kind != "ident":
             raise MyrkError(token.pos, "expected a statement")
         self.index += 1
+        if token.text == "buffer":
+            name = self.name()
+            self.take(":")
+            dtype = self.name().text
+            self.take("[")
+            size = self.expression()
+            self.take("]")
+            self.take(";")
+            return Stmt("buffer", token.pos, (name.text, dtype), (size,))
         if token.text in ("let", "var"):
             name = self.name()
             self.take(":")
@@ -96,6 +105,13 @@ class Parser:
             end = self.expression()
             body = self.block()
             return Stmt("for", token.pos, index.text, (start, end, body))
+        if self.match("["):
+            index = self.expression()
+            self.take("]")
+            self.take("=")
+            value = self.expression()
+            self.take(";")
+            return Stmt("store", token.pos, token.text, (index, value))
         self.take("=")
         value = self.expression()
         self.take(";")
@@ -118,6 +134,10 @@ class Parser:
                             break
                 self.take(")")
                 left = Expr("call", token.pos, token.text, tuple(args))
+            elif self.match("["):
+                index = self.expression()
+                self.take("]")
+                left = Expr("load", token.pos, token.text, (index,))
             else:
                 left = Expr("name", token.pos, token.text)
         elif token.kind in ("-", "!"):

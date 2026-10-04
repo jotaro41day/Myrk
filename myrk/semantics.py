@@ -14,6 +14,7 @@ class Symbol:
     dtype: str
     cname: str
     mutable: bool
+    kind: str = "scalar"
 
 
 class Checker:
@@ -29,10 +30,10 @@ class Checker:
             raise MyrkError(pos, f"unknown type {name!r}; expected i32, f32, f64 or bool")
         return name
 
-    def add_symbol(self, name: str, dtype: str, mutable: bool, pos: Pos) -> Symbol:
+    def add_symbol(self, name: str, dtype: str, mutable: bool, pos: Pos, kind: str = "scalar") -> Symbol:
         if name in self.scopes[-1]:
             raise MyrkError(pos, f"duplicate declaration of {name!r}")
-        symbol = Symbol(dtype, f"myrk_v_{self.next_symbol}", mutable)
+        symbol = Symbol(dtype, f"myrk_v_{self.next_symbol}", mutable, kind)
         self.next_symbol += 1
         self.scopes[-1][name] = symbol
         return symbol
@@ -80,6 +81,19 @@ class Checker:
 
     def statement(self, statement: Stmt) -> Instruction:
         op = statement.kind
+        if op == "buffer":
+            name, dtype = statement.value
+            if dtype not in ("f32", "f64"):
+                raise MyrkError(statement.pos, "buffer element must be f32 or f64")
+            size = self.expression(statement.args[0])
+            self.require(size, "i32", size.pos)
+            symbol = self.add_symbol(name, dtype, True, statement.pos, "buffer")
+            return Instruction(op, statement.pos, (symbol.cname, dtype), (size,))
+        if op == "store":
+            symbol, index = self.buffer_index(statement.value, statement.args[0], statement.pos)
+            value = self.expression(statement.args[1])
+            self.require(value, symbol.dtype, value.pos)
+            return Instruction(op, statement.pos, symbol.cname, (index, value))
         if op == "declare":
             name, dtype, mutable = statement.value
             dtype = self.type_name(dtype, statement.pos)
@@ -89,6 +103,8 @@ class Checker:
             return Instruction(op, statement.pos, (symbol.cname, dtype), (value,))
         if op == "assign":
             symbol = self.lookup(statement.value, statement.pos)
+            if symbol.kind != "scalar":
+                raise MyrkError(statement.pos, f"cannot assign a {symbol.kind}; assign an element")
             if not symbol.mutable:
                 raise MyrkError(statement.pos, f"cannot assign to immutable variable {statement.value!r}; use 'var'")
             value = self.expression(statement.args[0])
@@ -113,7 +129,18 @@ class Checker:
             return Instruction(op, statement.pos, index.cname, (start, end, body))
         raise AssertionError(op)
 
+    def buffer_index(self, name, expression, pos):
+        symbol = self.lookup(name, pos)
+        if symbol.kind != "buffer":
+            raise MyrkError(pos, f"{name!r} is not a buffer")
+        index = self.expression(expression)
+        self.require(index, "i32", index.pos)
+        return symbol, index
+
     def expression(self, expr: Expr) -> Value:
+        if expr.kind == "load":
+            symbol, index = self.buffer_index(expr.value, expr.args[0], expr.pos)
+            return Value("load", symbol.dtype, expr.pos, symbol.cname, (index,))
         if expr.kind == "int":
             number = int(expr.value)
             if number > 2147483647:
@@ -127,6 +154,8 @@ class Checker:
             return Value("constant", "bool", expr.pos, expr.value)
         if expr.kind == "name":
             symbol = self.lookup(expr.value, expr.pos)
+            if symbol.kind != "scalar":
+                raise MyrkError(expr.pos, f"expected scalar, found {symbol.kind}")
             return Value("variable", symbol.dtype, expr.pos, symbol.cname)
         if expr.kind == "call":
             signature = self.signatures.get(expr.value)

@@ -8,7 +8,7 @@ questões de desempenho levantadas pelo [AresY](https://github.com/Jotaroofdioin
 
 **Estado atual:** funções, `i32`, `f32`, `f64`, `bool`, variáveis imutáveis (`let`)
 e mutáveis (`var`), laços `for` de faixa exclusiva, aritmética, comparações,
-`print` e `return`. Ainda não há arrays, tensores, populações neurais, SNN,
+`print` e `return`. Há buffers contíguos locais f32/f64 com índices verificados. Ainda não há tensores, populações neurais, SNN,
 SIMD explícito ou paralelismo. Não há alegação de vantagem de desempenho.
 
 ## Começar

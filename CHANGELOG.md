@@ -6,3 +6,8 @@
 - Scalar `i32`, `f32`, `f64`, `bool`, functions, variables and range loops.
 - Source installation script, comparable scalar C baseline and LIF C/Python
   reference workload.
+
+## Unreleased
+
+- Buffers locais contíguos f32/f64, índices verificados e liberação por escopo.
+- Prioridade SNN/Izhikevich documentada no ADR 0002.

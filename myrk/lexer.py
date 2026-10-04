@@ -63,7 +63,7 @@ def lex(source: str) -> list[Token]:
             if pair in ("->", "..", "==", "!=", "<=", ">="):
                 i += 2
                 kind = pair
-            elif char in "{}():;,+-*/%=<>!":
+            elif char in "{}[]():;,+-*/%=<>!":
                 i += 1
                 kind = char
             else:

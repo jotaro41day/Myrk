@@ -21,6 +21,16 @@
 - O compilador informa arquivo, linha e coluna nos erros de sintaxe e tipos.
   O runtime só informa a categoria da falha de divisão.
 
-Não há ainda arrays, buffers, módulos, imports, strings, threads, tensores ou
+Não há ainda módulos, imports, strings, threads, tensores ou
 construções SNN. Os programas são compilados AOT para C11 e depois para um
 executável nativo por um compilador C externo.
+
+## Buffers locais
+
+`buffer x: f32[n];` ou `buffer x: f64[n];` aloca n elementos contíguos,
+zerados. n é i32 e avaliado uma vez. `x[i]` lê e `x[i] = valor;` escreve.
+Índice i32 fora de `[0,n)`, tamanho negativo ou falha de alocação encerram
+com código 70. Um buffer vazio é válido. O índice é avaliado/verificado antes
+do valor a armazenar. Buffers são liberados no fim do escopo, inclusive em
+retornos antecipados; não podem ser copiados, passados ou retornados ainda.
+Veja `examples/vector.myrk` (resultado 2048).

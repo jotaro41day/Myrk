@@ -8,6 +8,18 @@ class CGenerator:
     def __init__(self):
         self.next_loop = 0
         self.next_temp = 0
+        self.resources = []
+
+    def cleanup(self, resources, indent):
+        return [f"{'    ' * indent}free({name});" for name in reversed(resources)]
+
+    def block(self, body, indent):
+        self.resources.append([])
+        lines = []
+        for item in body:
+            lines.extend(self.statement(item, indent))
+        lines.extend(self.cleanup(self.resources.pop(), indent))
+        return lines
 
     def temporary(self, dtype: str, expression: str, indent: int) -> tuple[str, str]:
         name = f"myrk_t_{self.next_temp}"
@@ -15,6 +27,11 @@ class CGenerator:
         return f"{'    ' * indent}{C_TYPES[dtype]} {name} = {expression};", name
 
     def value(self, item: Value, indent: int) -> tuple[list[str], str]:
+        if item.op == "load":
+            lines, index = self.value(item.args[0], indent)
+            assignment, name = self.temporary(item.dtype,
+                f"{item.data}[myrk_index({index}, {item.data}_size)]", indent)
+            return lines + [assignment], name
         if item.op == "constant":
             if item.dtype == "bool":
                 return [], "true" if item.data else "false"
@@ -57,6 +74,19 @@ class CGenerator:
 
     def statement(self, item: Instruction, indent: int) -> list[str]:
         pad = "    " * indent
+        if item.op == "buffer":
+            name, dtype = item.data
+            lines, size = self.value(item.args[0], indent)
+            self.resources[-1].append(name)
+            return lines + [f"{pad}int32_t {name}_size = {size};",
+                f"{pad}{C_TYPES[dtype]} *{name} = myrk_alloc({name}_size, sizeof({C_TYPES[dtype]}));"]
+        if item.op == "store":
+            lines, index = self.value(item.args[0], indent)
+            assignment, index = self.temporary("i32",
+                f"myrk_index({index}, {item.data}_size)", indent)
+            lines.append(assignment)
+            value_lines, value = self.value(item.args[1], indent)
+            return lines + value_lines + [f"{pad}{item.data}[{index}] = {value};"]
         if item.op == "declare":
             cname, dtype = item.data
             lines, value = self.value(item.args[0], indent)
@@ -66,7 +96,9 @@ class CGenerator:
             return lines + [f"{pad}{item.data} = {value};"]
         if item.op == "return":
             lines, value = self.value(item.args[0], indent)
-            return lines + [f"{pad}return {value};"]
+            assignment, value = self.temporary(item.args[0].dtype, value, indent)
+            cleanup = self.cleanup([name for scope in self.resources for name in scope], indent)
+            return lines + [assignment] + cleanup + [f"{pad}return {value};"]
         if item.op == "print":
             value = item.args[0]
             lines, rendered = self.value(value, indent)
@@ -90,8 +122,7 @@ class CGenerator:
                      f"{pad}    int32_t myrk_end_{loop_id} = {end_value};",
                      f"{pad}    for (int32_t {item.data} = myrk_start_{loop_id}; "
                      f"{item.data} < myrk_end_{loop_id}; ++{item.data}) {{"]
-            for child in body:
-                lines.extend(self.statement(child, indent + 2))
+            lines.extend(self.block(body, indent + 2))
             lines.extend((f"{pad}    }}", f"{pad}}}"))
             return lines
         raise AssertionError(item.op)
@@ -101,6 +132,18 @@ class CGenerator:
                  "#include <stdbool.h>", "#include <stdint.h>",
                  "#include <stdio.h>", "#include <stdlib.h>",
                  "#include <limits.h>",
+                 "static void *myrk_alloc(int32_t n, size_t width) {",
+                 "    if (n < 0 || (size_t)n > SIZE_MAX / width) {",
+                 '        fputs("Myrk runtime error: invalid buffer size\\n", stderr); exit(70);',
+                 "    }",
+                 "    void *p = calloc(n ? (size_t)n : 1, width);",
+                 '    if (!p) { fputs("Myrk runtime error: allocation failed\\n", stderr); exit(70); }',
+                 "    return p;",
+                 "}",
+                 "static int32_t myrk_index(int32_t i, int32_t n) {",
+                 '    if (i < 0 || i >= n) { fputs("Myrk runtime error: buffer index out of bounds\\n", stderr); exit(70); }',
+                 "    return i;",
+                 "}",
                  "static int32_t myrk_div_i32(int32_t a, int32_t b) {",
                  "    if (b == 0 || (a == INT32_MIN && b == -1)) {",
                  '        fputs("Myrk runtime error: invalid i32 division\\n", stderr);',
@@ -121,8 +164,7 @@ class CGenerator:
         for procedure in module.procedures:
             params = ", ".join(f"{C_TYPES[dtype]} {name}" for name, dtype in procedure.params) or "void"
             lines.append(f"static {C_TYPES[procedure.result]} myrk_f_{procedure.name}({params}) {{")
-            for statement in procedure.body:
-                lines.extend(self.statement(statement, 1))
+            lines.extend(self.block(procedure.body, 1))
             lines.append("}")
         lines.append("int main(void) { return (int)myrk_f_main(); }")
         return "\n".join(lines) + "\n"
