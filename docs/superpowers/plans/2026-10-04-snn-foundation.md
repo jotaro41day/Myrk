@@ -13,15 +13,15 @@ returns; type/precision mismatches; exact threshold/reset order and vector tails
 
 ## Tasks
 
-- [ ] Buffers: extend lexer/parser, add typed IR buffer allocate/load/store;
+- [x] Buffers: extend lexer/parser, add typed IR buffer allocate/load/store;
   codegen owns/free storage at lexical boundaries and return. Add frontend and
   native tests (zero, bounds, wrong types, return cleanup), watch failures,
   implement, run full suite, document and commit.
-- [ ] Population: explicit PopulationSpec/UniformParameter in IR and model
+- [x] Population: explicit PopulationSpec/UniformParameter in IR and model
   kernel in myrk/neural.py; parser declaration and step, scalar state queries.
   Tests compare native steps to independent rounded f32/f64 Python reference,
   including tails and resets. Run suite and executable example, commit.
-- [ ] Performance lab: benchmarks/neuron/izhikevich.py, independent C oracle,
+- [x] Performance lab: benchmarks/neuron/izhikevich.py, independent C oracle,
   native monotonic kernel timing, all-state differential check before timing,
   bounded scale sweep, compiler/hardware/flags/raw samples, RSS and memory model.
   Compare strict variants, inspect assembly, record evidence, commit.

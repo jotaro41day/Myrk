@@ -1,6 +1,8 @@
 # Myrk
 
-Myrk é uma linguagem experimental para computação neural e científica. A versão
+Myrk é uma linguagem experimental com prioridade em simulação SNN de alto
+desempenho, especialmente Android/Termux/AArch64. A meta é perseguir o limite
+do hardware com evidência; não há alegação de ser a mais rápida. A versão
 0.1.0 implementa apenas uma fatia inicial: código fonte → lexer/parser → análise
 semântica → IR tipada → C gerado → executável nativo por Clang ou GCC. O binário
 gerado não precisa de Python. Myrk é um projeto independente, inspirado em
@@ -41,7 +43,8 @@ pedido por `-o`, ou ao lado do fonte sem a extensão. `--help` lista os comandos
 Primeiro alvo de desenvolvimento: CPU AArch64. A instalação usa Python e Clang
 disponíveis no Termux, sem root ou CUDA. **A versão 0.1.0 passou por instalação,
 17 testes e os dois benchmarks em um Android 15/Termux AArch64 relatado por um
-usuário.** Outros dispositivos e versões ainda precisam de validação.
+usuário.** Buffers e Izhikevich adicionados depois ainda aguardam execução
+no Android. Outros dispositivos e versões ainda precisam de validação.
 
 ```sh
 pkg update
@@ -78,6 +81,7 @@ limitações estão em [docs/LANGUAGE.md](docs/LANGUAGE.md).
 python3 -m unittest discover -s tests -v
 python3 benchmarks/run.py
 python3 -m benchmarks.lif
+python3 -m benchmarks.neuron.izhikevich --sizes 1000 10000 100000 1000000
 ```
 
 O benchmark inicial compara o mesmo laço `i32` com um baseline C compilado
@@ -87,13 +91,40 @@ time-driven em C, validado contra um oráculo Python em escala pequena; Myrk
 ainda não compila esse modelo. Metodologia e resultados
 estão em [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
+
+## Izhikevich nativo
+
+```sh
+myrk run examples/vector.myrk
+myrk run examples/izhikevich.myrk
+python3 -m benchmarks.neuron.izhikevich --sizes 1000 10000 100000 1000000 --dtype f32
+```
+
+Populações usam dois buffers contíguos, parâmetros uniformes e Euler simultâneo
+com dt explícito. `step`, `spikes`, `voltage` e `recovery` são operações da
+linguagem. **São neurônios independentes: ainda não há conectividade ou sinapses.**
+O laboratório confere todos os estados/spikes com C antes de reportar velocidade,
+além do oráculo Python pequeno. Dtypes são comparados separadamente, sem
+fast-math. Escalas até 10M têm orçamento de memória configurável; detalhes em
+[benchmarks/neuron/README.md](benchmarks/neuron/README.md).
+
+Para atualizar a instalação existente no Termux:
+
+```sh
+cd ~/Myrk
+git pull --ff-only
+./install.sh
+python3 -m unittest discover -s tests -v
+myrk run examples/izhikevich.myrk
+```
+
 ## Arquitetura e próximos passos
 
 O [ADR 0001](docs/decisions/0001-bootstrap-backend.md) explica a escolha
-inicial do backend. O [roadmap](docs/ROADMAP.md) define critérios verificáveis
-para introduzir buffers, tensores e LIF antes de testar esparsidade e execução
-por eventos. A IR atual é escalar e tipada; operações neurais serão adicionadas
-somente junto a semântica, testes diferenciais e um baseline medido.
+inicial do backend. O [roadmap](docs/ROADMAP.md) agora prioriza Izhikevich, escala, SIMD, spikes e
+sinapses reais antes de tensores gerais e GPU. O [ADR 0002](docs/decisions/0002-snn-populations.md)
+define populações na IR, uniformidade, buffers SoA e semântica do solver.
+Veja o [plano de milhões de neurônios](docs/MILLION_NEURON_PLAN.md).
 
 Licença: MIT. Consulte [CONTRIBUTING.md](CONTRIBUTING.md) antes de alterar a
 linguagem ou otimizar kernels.

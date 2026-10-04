@@ -1,0 +1,941 @@
+{
+  "category": "neuron_update",
+  "model": "Izhikevich",
+  "solver": "euler_simultaneous",
+  "threshold": "after integration >=30; reset v=c, u=u_next+d",
+  "dt_ms": 0.5,
+  "current": 10.0,
+  "threads": 1,
+  "mode": "strict; no FMA contraction",
+  "hardware": {
+    "machine": "x86_64",
+    "system": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3
+  },
+  "compiler": "Debian clang version 19.1.7 (3+b1)",
+  "repeat": 3,
+  "warmup": 1,
+  "steps": 100,
+  "precision_comparison": {
+    "neurons": 97,
+    "steps": 100,
+    "max_trajectory_abs_v": 0.0067308338832461345,
+    "max_trajectory_abs_u": 2.66951918064251e-05,
+    "spike_neuron_step_mismatches": 0,
+    "spikes_f32": 194,
+    "spikes_f64": 194,
+    "note": "Precision sensitivity for this case; not solver convergence or scientific validation"
+  },
+  "results": [
+    {
+      "neurons": 1000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000,
+      "validation_payload_bytes": 16000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.07140300294850022,
+        "samples_ms": [
+          0.07140300294850022,
+          0.07158200605772436,
+          0.07122000533854589
+        ],
+        "ms_per_timestep": 0.0007140300294850022,
+        "updates_per_second": 1400501321.6618567,
+        "realtime_factor": 700.2506608309284,
+        "peak_rss_kib_median": 636,
+        "process_median_ms": 1.4080210021347739,
+        "spikes": 2000,
+        "sum_v": -69760.3374786377,
+        "sum_u": -4426.634276866913,
+        "state_hash": "cf9ddbc0dce1e41d",
+        "effective_state_gb_s": 22.408021146589707
+      },
+      "c": {
+        "kernel_median_ms": 0.07140300294850022,
+        "samples_ms": [
+          0.07140300294850022,
+          0.07139700028346851,
+          0.0714330017217435
+        ],
+        "ms_per_timestep": 0.0007140300294850022,
+        "updates_per_second": 1400501321.6618567,
+        "realtime_factor": 700.2506608309284,
+        "peak_rss_kib_median": 636,
+        "process_median_ms": 1.6056249951361679,
+        "spikes": 2000,
+        "sum_v": -69760.3374786377,
+        "sum_u": -4426.634276866913,
+        "state_hash": "cf9ddbc0dce1e41d"
+      }
+    },
+    {
+      "neurons": 10000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000,
+      "validation_payload_bytes": 160000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.7755820042802952,
+        "samples_ms": [
+          0.7146560019464232,
+          0.7755820042802952,
+          0.8994390009320341
+        ],
+        "ms_per_timestep": 0.007755820042802952,
+        "updates_per_second": 1289354310.0293496,
+        "realtime_factor": 64.46771550146748,
+        "peak_rss_kib_median": 712,
+        "process_median_ms": 2.7769539956352673,
+        "spikes": 20000,
+        "sum_v": -697932.4136047363,
+        "sum_u": -44074.754093408585,
+        "state_hash": "c1789ed7a1ba2395",
+        "effective_state_gb_s": 20.629668960469594
+      },
+      "c": {
+        "kernel_median_ms": 0.7329579966608435,
+        "samples_ms": [
+          0.7329579966608435,
+          0.7622949997312389,
+          0.7123239993234165
+        ],
+        "ms_per_timestep": 0.007329579966608435,
+        "updates_per_second": 1364334661.134372,
+        "realtime_factor": 68.2167330567186,
+        "peak_rss_kib_median": 708,
+        "process_median_ms": 2.3841809961595573,
+        "spikes": 20000,
+        "sum_v": -697932.4136047363,
+        "sum_u": -44074.754093408585,
+        "state_hash": "c1789ed7a1ba2395"
+      }
+    },
+    {
+      "neurons": 100000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 800000,
+      "validation_payload_bytes": 1600000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 8.3501730041462,
+        "samples_ms": [
+          7.720955996774137,
+          8.3501730041462,
+          9.311894005804788
+        ],
+        "ms_per_timestep": 0.083501730041462,
+        "updates_per_second": 1197579977.6884377,
+        "realtime_factor": 5.987899888442189,
+        "peak_rss_kib_median": 1420,
+        "process_median_ms": 11.919789998501074,
+        "spikes": 200000,
+        "sum_v": -6979464.896461487,
+        "sum_u": -440669.9681136608,
+        "state_hash": "13add58eeb67ac50",
+        "effective_state_gb_s": 19.161279643015003
+      },
+      "c": {
+        "kernel_median_ms": 8.365652996872086,
+        "samples_ms": [
+          8.365652996872086,
+          8.31157699576579,
+          8.40688400057843
+        ],
+        "ms_per_timestep": 0.08365652996872086,
+        "updates_per_second": 1195363948.7245042,
+        "realtime_factor": 5.976819743622522,
+        "peak_rss_kib_median": 1416,
+        "process_median_ms": 11.794443002145272,
+        "spikes": 200000,
+        "sum_v": -6979464.896461487,
+        "sum_u": -440669.9681136608,
+        "state_hash": "13add58eeb67ac50"
+      }
+    },
+    {
+      "neurons": 1000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000000,
+      "validation_payload_bytes": 16000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 89.4896690006135,
+        "samples_ms": [
+          104.6588140015956,
+          83.90278199658496,
+          89.4896690006135
+        ],
+        "ms_per_timestep": 0.894896690006135,
+        "updates_per_second": 1117447422.8898358,
+        "realtime_factor": 0.5587237114449181,
+        "peak_rss_kib_median": 8452,
+        "process_median_ms": 111.11329599953024,
+        "spikes": 2000000,
+        "sum_v": -69794722.83686829,
+        "sum_u": -4406651.433073759,
+        "state_hash": "5256cd2b83f83d79",
+        "effective_state_gb_s": 17.879158766237374
+      },
+      "c": {
+        "kernel_median_ms": 91.30007300700527,
+        "samples_ms": [
+          106.41936500178417,
+          86.46690400200896,
+          91.30007300700527
+        ],
+        "ms_per_timestep": 0.9130007300700527,
+        "updates_per_second": 1095289376.0810816,
+        "realtime_factor": 0.5476446880405409,
+        "peak_rss_kib_median": 8452,
+        "process_median_ms": 110.22686400247039,
+        "spikes": 2000000,
+        "sum_v": -69794722.83686829,
+        "sum_u": -4406651.433073759,
+        "state_hash": "5256cd2b83f83d79"
+      }
+    },
+    {
+      "neurons": 2000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 16000000,
+      "validation_payload_bytes": 32000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 177.6133050007047,
+        "samples_ms": [
+          177.6133050007047,
+          177.9058870015433,
+          173.2231890055118
+        ],
+        "ms_per_timestep": 1.7761330500070471,
+        "updates_per_second": 1126041768.09393,
+        "realtime_factor": 0.2815104420234825,
+        "peak_rss_kib_median": 16264,
+        "process_median_ms": 213.2816540033673,
+        "spikes": 4000000,
+        "sum_v": -139589468.39914703,
+        "sum_u": -8813290.625544071,
+        "state_hash": "0225eef28932503a",
+        "effective_state_gb_s": 18.01666828950288
+      },
+      "c": {
+        "kernel_median_ms": 177.11241200595396,
+        "samples_ms": [
+          173.22857799445046,
+          177.11241200595396,
+          178.7427659946843
+        ],
+        "ms_per_timestep": 1.7711241200595396,
+        "updates_per_second": 1129226335.6069965,
+        "realtime_factor": 0.2823065839017491,
+        "peak_rss_kib_median": 16268,
+        "process_median_ms": 214.1451319985208,
+        "spikes": 4000000,
+        "sum_v": -139589468.39914703,
+        "sum_u": -8813290.625544071,
+        "state_hash": "0225eef28932503a"
+      }
+    },
+    {
+      "neurons": 5000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 40000000,
+      "validation_payload_bytes": 80000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 438.8194620041759,
+        "samples_ms": [
+          432.0556890015723,
+          493.2408669992583,
+          438.8194620041759
+        ],
+        "ms_per_timestep": 4.388194620041759,
+        "updates_per_second": 1139420748.8346128,
+        "realtime_factor": 0.11394207488346128,
+        "peak_rss_kib_median": 39696,
+        "process_median_ms": 539.1881309988094,
+        "spikes": 10000000,
+        "sum_v": -348973734.7505264,
+        "sum_u": -22033187.715080738,
+        "state_hash": "253a2e335b790d2f",
+        "effective_state_gb_s": 18.230731981353806
+      },
+      "c": {
+        "kernel_median_ms": 460.11734000057913,
+        "samples_ms": [
+          438.0010810054955,
+          460.11734000057913,
+          502.8267279994907
+        ],
+        "ms_per_timestep": 4.601173400005791,
+        "updates_per_second": 1086679324.016284,
+        "realtime_factor": 0.10866793240162839,
+        "peak_rss_kib_median": 39696,
+        "process_median_ms": 562.9993809998268,
+        "spikes": 10000000,
+        "sum_v": -348973734.7505264,
+        "sum_u": -22033187.715080738,
+        "state_hash": "253a2e335b790d2f"
+      }
+    },
+    {
+      "neurons": 10000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000000,
+      "validation_payload_bytes": 160000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 0.5821119993925095,
+        "native_compile_ms": 312.6473329975852,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 1207.7699490037048,
+        "samples_ms": [
+          1389.9796050027362,
+          994.762542002718,
+          1207.7699490037048
+        ],
+        "ms_per_timestep": 12.077699490037048,
+        "updates_per_second": 827972248.2124223,
+        "realtime_factor": 0.041398612410621115,
+        "peak_rss_kib_median": 78764,
+        "process_median_ms": 1431.9283190052374,
+        "spikes": 20000000,
+        "sum_v": -697947523.1015472,
+        "sum_u": -44066344.698498964,
+        "state_hash": "4e119d18b3f0410d",
+        "effective_state_gb_s": 13.247555971398755
+      },
+      "c": {
+        "kernel_median_ms": 1251.5496519990847,
+        "samples_ms": [
+          1251.5496519990847,
+          1625.0493289990118,
+          950.7212419994175
+        ],
+        "ms_per_timestep": 12.515496519990847,
+        "updates_per_second": 799009450.725916,
+        "realtime_factor": 0.0399504725362958,
+        "peak_rss_kib_median": 78764,
+        "process_median_ms": 1459.405206995143,
+        "spikes": 20000000,
+        "sum_v": -697947523.1015472,
+        "sum_u": -44066344.698498964,
+        "state_hash": "4e119d18b3f0410d"
+      }
+    },
+    {
+      "neurons": 1000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 16000,
+      "validation_payload_bytes": 32000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.18027500482276082,
+        "samples_ms": [
+          0.18131199612980708,
+          0.15294100012397394,
+          0.18027500482276082
+        ],
+        "ms_per_timestep": 0.0018027500482276082,
+        "updates_per_second": 554708070.0306512,
+        "realtime_factor": 277.3540350153256,
+        "peak_rss_kib_median": 648,
+        "process_median_ms": 1.7288939998252317,
+        "spikes": 2000,
+        "sum_v": -69760.3389672161,
+        "sum_u": -4426.628194260691,
+        "state_hash": "42b436d8a517641e",
+        "effective_state_gb_s": 17.75065824098084
+      },
+      "c": {
+        "kernel_median_ms": 0.16584600234637037,
+        "samples_ms": [
+          0.16584600234637037,
+          0.15080400044098496,
+          0.23486200370825827
+        ],
+        "ms_per_timestep": 0.0016584600234637037,
+        "updates_per_second": 602969010.9210435,
+        "realtime_factor": 301.48450546052175,
+        "peak_rss_kib_median": 644,
+        "process_median_ms": 2.0393579980009235,
+        "spikes": 2000,
+        "sum_v": -69760.3389672161,
+        "sum_u": -4426.628194260691,
+        "state_hash": "42b436d8a517641e"
+      }
+    },
+    {
+      "neurons": 10000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 160000,
+      "validation_payload_bytes": 320000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2.211110004282091,
+        "samples_ms": [
+          2.211110004282091,
+          1.9634179989225231,
+          4.950886002916377
+        ],
+        "ms_per_timestep": 0.022111100042820908,
+        "updates_per_second": 452261532.9239048,
+        "realtime_factor": 22.61307664619524,
+        "peak_rss_kib_median": 784,
+        "process_median_ms": 6.439084005251061,
+        "spikes": 20000,
+        "sum_v": -697932.4284124755,
+        "sum_u": -44074.69327028452,
+        "state_hash": "25b0dc1f5f3414ef",
+        "effective_state_gb_s": 14.472369053564952
+      },
+      "c": {
+        "kernel_median_ms": 1.95480899856193,
+        "samples_ms": [
+          1.95480899856193,
+          1.6695439990144223,
+          2.724029000091832
+        ],
+        "ms_per_timestep": 0.0195480899856193,
+        "updates_per_second": 511558930.17458874,
+        "realtime_factor": 25.577946508729436,
+        "peak_rss_kib_median": 784,
+        "process_median_ms": 4.187274003925268,
+        "spikes": 20000,
+        "sum_v": -697932.4284124755,
+        "sum_u": -44074.69327028452,
+        "state_hash": "25b0dc1f5f3414ef"
+      }
+    },
+    {
+      "neurons": 100000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 1600000,
+      "validation_payload_bytes": 3200000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 35.88141399814049,
+        "samples_ms": [
+          21.155617003387306,
+          35.88141399814049,
+          67.3670010000933
+        ],
+        "ms_per_timestep": 0.3588141399814049,
+        "updates_per_second": 278695817.29745203,
+        "realtime_factor": 1.3934790864872604,
+        "peak_rss_kib_median": 2204,
+        "process_median_ms": 46.883014001650736,
+        "spikes": 200000,
+        "sum_v": -6979465.044263834,
+        "sum_u": -440669.35989613476,
+        "state_hash": "20e39d4333039ff3",
+        "effective_state_gb_s": 8.918266153518465
+      },
+      "c": {
+        "kernel_median_ms": 23.52493900252739,
+        "samples_ms": [
+          26.317039999412373,
+          18.185009001172148,
+          23.52493900252739
+        ],
+        "ms_per_timestep": 0.2352493900252739,
+        "updates_per_second": 425080804.6271939,
+        "realtime_factor": 2.1254040231359697,
+        "peak_rss_kib_median": 2204,
+        "process_median_ms": 37.2538590017939,
+        "spikes": 200000,
+        "sum_v": -6979465.044263834,
+        "sum_u": -440669.35989613476,
+        "state_hash": "20e39d4333039ff3"
+      }
+    },
+    {
+      "neurons": 1000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 16000000,
+      "validation_payload_bytes": 32000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 189.86040500021772,
+        "samples_ms": [
+          189.86040500021772,
+          221.93530799995642,
+          185.4046400039806
+        ],
+        "ms_per_timestep": 1.8986040500021772,
+        "updates_per_second": 526702763.5376914,
+        "realtime_factor": 0.2633513817688457,
+        "peak_rss_kib_median": 16268,
+        "process_median_ms": 225.03854599926854,
+        "spikes": 2000000,
+        "sum_v": -69794724.3146691,
+        "sum_u": -4406645.350943031,
+        "state_hash": "4a7d59f8b0bcd668",
+        "effective_state_gb_s": 16.854488433206125
+      },
+      "c": {
+        "kernel_median_ms": 303.7855340007809,
+        "samples_ms": [
+          303.7855340007809,
+          226.94175399374217,
+          375.76711300062016
+        ],
+        "ms_per_timestep": 3.037855340007809,
+        "updates_per_second": 329179598.1297218,
+        "realtime_factor": 0.16458979906486093,
+        "peak_rss_kib_median": 16268,
+        "process_median_ms": 374.72650400013663,
+        "spikes": 2000000,
+        "sum_v": -69794724.3146691,
+        "sum_u": -4406645.350943031,
+        "state_hash": "4a7d59f8b0bcd668"
+      }
+    },
+    {
+      "neurons": 2000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 32000000,
+      "validation_payload_bytes": 64000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 393.06459900399204,
+        "samples_ms": [
+          393.06459900399204,
+          423.9206769998418,
+          380.72717300383374
+        ],
+        "ms_per_timestep": 3.9306459900399204,
+        "updates_per_second": 508822215.24602056,
+        "realtime_factor": 0.12720555381150514,
+        "peak_rss_kib_median": 31888,
+        "process_median_ms": 465.9493380022468,
+        "spikes": 4000000,
+        "sum_v": -139589471.35428062,
+        "sum_u": -8813278.46128516,
+        "state_hash": "376d2820559e7074",
+        "effective_state_gb_s": 16.282310887872658
+      },
+      "c": {
+        "kernel_median_ms": 368.6464580023312,
+        "samples_ms": [
+          368.6464580023312,
+          364.73648499668343,
+          378.11156500538345
+        ],
+        "ms_per_timestep": 3.686464580023312,
+        "updates_per_second": 542525218.0199579,
+        "realtime_factor": 0.1356313045049895,
+        "peak_rss_kib_median": 31888,
+        "process_median_ms": 436.5085259996704,
+        "spikes": 4000000,
+        "sum_v": -139589471.35428062,
+        "sum_u": -8813278.46128516,
+        "state_hash": "376d2820559e7074"
+      }
+    },
+    {
+      "neurons": 5000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 80000000,
+      "validation_payload_bytes": 160000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 959.9076520025847,
+        "samples_ms": [
+          947.0987130043795,
+          959.9076520025847,
+          1071.0658780008089
+        ],
+        "ms_per_timestep": 9.599076520025847,
+        "updates_per_second": 520883440.14852554,
+        "realtime_factor": 0.05208834401485256,
+        "peak_rss_kib_median": 78764,
+        "process_median_ms": 1149.393160994805,
+        "spikes": 10000000,
+        "sum_v": -348973742.141002,
+        "sum_u": -22033157.304424863,
+        "state_hash": "70648337ee114146",
+        "effective_state_gb_s": 16.668270084752816
+      },
+      "c": {
+        "kernel_median_ms": 925.8266480028396,
+        "samples_ms": [
+          1097.2178929951042,
+          906.2364060009713,
+          925.8266480028396
+        ],
+        "ms_per_timestep": 9.258266480028396,
+        "updates_per_second": 540057905.093337,
+        "realtime_factor": 0.05400579050933371,
+        "peak_rss_kib_median": 78764,
+        "process_median_ms": 1131.92878299742,
+        "spikes": 10000000,
+        "sum_v": -348973742.141002,
+        "sum_u": -22033157.304424863,
+        "state_hash": "70648337ee114146"
+      }
+    },
+    {
+      "neurons": 10000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 160000000,
+      "validation_payload_bytes": 320000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off"
+        ],
+        "frontend_ms": 4.486744001042098,
+        "native_compile_ms": 211.75567699538078,
+        "binary_bytes": 20976
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2278.960299001483,
+        "samples_ms": [
+          2095.3190550062573,
+          2321.3245869992534,
+          2278.960299001483
+        ],
+        "ms_per_timestep": 22.789602990014828,
+        "updates_per_second": 438796586.51278216,
+        "realtime_factor": 0.021939829325639107,
+        "peak_rss_kib_median": 156892,
+        "process_median_ms": 2678.57573999936,
+        "spikes": 20000000,
+        "sum_v": -697947537.892701,
+        "sum_u": -44066283.876275666,
+        "state_hash": "fc7c4b294edfe2f0",
+        "effective_state_gb_s": 14.041490768409028
+      },
+      "c": {
+        "kernel_median_ms": 2215.2096210047603,
+        "samples_ms": [
+          2215.2096210047603,
+          2020.0750589938252,
+          2525.870137993479
+        ],
+        "ms_per_timestep": 22.152096210047603,
+        "updates_per_second": 451424547.1480151,
+        "realtime_factor": 0.022571227357400754,
+        "peak_rss_kib_median": 156892,
+        "process_median_ms": 2569.1153640000266,
+        "spikes": 20000000,
+        "sum_v": -697947537.892701,
+        "sum_u": -44066283.876275666,
+        "state_hash": "fc7c4b294edfe2f0"
+      }
+    }
+  ]
+}
