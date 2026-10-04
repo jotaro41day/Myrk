@@ -1,4 +1,6 @@
 import unittest
+import os
+from unittest.mock import patch
 from myrk.parser import parse
 from myrk.semantics import check
 from myrk.codegen_c import generate
@@ -7,6 +9,28 @@ from test_population import declaration
 
 
 class BatchCompilerTests(unittest.TestCase):
+    def test_thread_configuration_is_validated(self):
+        for value in ['0','-1','65','four','4x']:
+            with self.subTest(value=value), patch.dict(os.environ,{'MYRK_THREADS':value}):
+                result=native(program(declaration()+'for t in 0..2 {step(p);}'))
+                self.assertEqual(result.returncode,70)
+                self.assertIn('MYRK_THREADS',result.stderr)
+
+    def test_parallel_batches_match_single_thread_and_reuse_pool(self):
+        for dtype in ['f32','f64']:
+            for n in [1,3,17,1031]:
+                source=program(declaration(dtype,n=n)+'''var total:i32=0;
+                    for batch in 0..3 {
+                        for t in 0..80 {step(p); total=total+spikes(p);}
+                        print(spikes(p)); print(voltage(p,0));
+                    } print(total);''')
+                with patch.dict(os.environ,{'MYRK_THREADS':'1'}):
+                    baseline=native(source)
+                with patch.dict(os.environ,{'MYRK_THREADS':'4'}):
+                    parallel=native(source)
+                self.assertEqual((parallel.returncode,parallel.stdout),
+                                 (baseline.returncode,baseline.stdout),parallel.stderr)
+
     def test_pure_loop_lowers_to_batch(self):
         source=program(declaration()+'for t in 0..80 { step(p); }')
         self.assertIn('myrk_izh_f32_advance(',generate(check(parse(source))).split('myrk_f_main(void) {')[1])

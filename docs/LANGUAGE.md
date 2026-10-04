@@ -50,3 +50,24 @@ O solver é Euler simultâneo, dt em ms, threshold >=30 após integração e res
 v=c, u=u_next+d. Fórmulas e ordem exatas: [ADR 0002](decisions/0002-snn-populations.md).
 Não é o solver clássico com dois meios passos. Não há lista de spikes,
 sinapses, delays, monitores automáticos ou seleção de solver ainda.
+
+## Execução de populações em lote e CPU threads
+
+O compilador pode agrupar um `for` cujo corpo seja somente `step(p);` ou
+`step(p); total = total + spikes(p);`, com acumulador i32. A população atual
+é independente e possui corrente uniforme constante. Nenhum passo é pulado;
+limites são avaliados uma vez, estado final, último spike count e wrap do
+acumulador são preservados. Qualquer observação/instrução adicional no corpo
+impede essa transformação. O solver e precisão permanecem iguais.
+
+`MYRK_THREADS=4 myrk run examples/izhikevich.myrk` executa lotes elegíveis
+com quatro threads de CPU (incluindo a principal). Default: uma thread.
+Valores válidos: 1..64; valor inválido produz runtime error 70 ao usar o pool.
+O pool pthread é criado uma vez e reutilizado entre lotes; não há criação de
+threads ou barreira por timestep. A contagem é reduzida ao final do lote.
+Loops observados permanecem sequenciais mesmo com MYRK_THREADS > 1.
+
+Programas nativos também aceitam MYRK_THREADS. Flags C incluem `-pthread`;
+Clang/GCC e pthread em Linux/Android são suficientes, sem OpenMP/CUDA.
+Mais threads podem piorar execução pequena ou aquecimento em celulares.
+Esta transformação não é válida automaticamente para futuras redes conectadas.

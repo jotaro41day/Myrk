@@ -10,6 +10,26 @@ import unittest
 
 @unittest.skipUnless(shutil.which('cc') or shutil.which('clang'), 'C compiler required')
 class NeuronBenchmarkTests(unittest.TestCase):
+    def test_summary_keeps_full_json_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'report.json'
+            result=self.run_bench('--sizes','17','--steps','7','--repeat','1',
+                '--warmup','0','--dtype','f32','--summary','--output',str(output))
+            self.assertEqual(result.returncode,0,result.stderr)
+            self.assertIn('Myrk',result.stdout)
+            self.assertIn('speedup',result.stdout)
+            self.assertTrue(json.loads(output.read_text())['results'][0]['validation']['passed'])
+
+    def test_parallel_schedule_matches_sequential_baseline(self):
+        result=self.run_bench('--sizes','1031','--steps','80','--repeat','1',
+                              '--warmup','0','--threads','4')
+        self.assertEqual(result.returncode,0,result.stderr)
+        for row in json.loads(result.stdout)['results']:
+            self.assertEqual(row['myrk']['threads'],4)
+            self.assertEqual(row['c']['threads'],4)
+            self.assertEqual(row['myrk_step']['threads'],1)
+            self.assertEqual(row['myrk']['state_hash'],row['myrk_step']['state_hash'])
+            self.assertIn('speedup_vs_single_thread_step',row)
     def run_bench(self, *args):
         return subprocess.run([sys.executable, '-m', 'benchmarks.neuron.izhikevich', *args],
                               capture_output=True, text=True)

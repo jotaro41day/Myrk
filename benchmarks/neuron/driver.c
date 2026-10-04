@@ -12,6 +12,9 @@
 #define REAL @REAL@
 #define R(x) @LITERAL@
 #define MYRK_STEP myrk_izh_@DTYPE@_step
+#define MYRK_ADVANCE myrk_izh_@DTYPE@_advance
+#define POPULATION myrk_population_@DTYPE@
+#define BATCH_SCHEDULE @BATCH@
 #include "@REFERENCE@"
 
 static const REAL A=R(0.02), B=R(0.2), C=R(-65.0), D=R(8.0), DT=R(0.5), INPUT=R(10.0);
@@ -26,6 +29,45 @@ static void initialize(int32_t n, REAL *v, REAL *u) {
 static int32_t update(int reference, int32_t n, REAL *v, REAL *u) {
     return reference ? reference_step(n,v,u,A,B,C,D,DT,INPUT)
                      : MYRK_STEP(n,v,u,A,B,C,D,DT,INPUT);
+}
+typedef struct {
+    POPULATION p;
+    uint32_t steps;
+    uint64_t totals[MYRK_MAX_THREADS];
+    int32_t last[MYRK_MAX_THREADS];
+} reference_batch;
+static void reference_partition(int id, int width, void *context) {
+    reference_batch *batch=context;
+    const POPULATION p=batch->p;
+    int32_t begin=(int32_t)((int64_t)p.size*id/width);
+    int32_t end=(int32_t)((int64_t)p.size*(id+1)/width);
+    uint64_t total=0; int32_t last=0;
+    for (uint32_t t=0;t<batch->steps;++t) {
+        last=reference_step(end-begin,p.v+begin,p.u+begin,p.a,p.b,p.c,p.d,p.dt,p.current);
+        total+=(uint64_t)last;
+    }
+    batch->totals[id]=total; batch->last[id]=last;
+}
+static uint64_t advance(int reference, int32_t n, REAL *v, REAL *u, uint32_t steps, int32_t *last) {
+    POPULATION p={.size=n,.v=v,.u=u,.a=A,.b=B,.c=C,.d=D,.dt=DT,.current=INPUT};
+    uint64_t total=0;
+    if (reference) {
+        if (myrk_cpu_threads()==1) {
+            for(uint32_t t=0;t<steps;++t) {
+                p.spikes=reference_step(n,v,u,A,B,C,D,DT,INPUT);
+                total+=(uint64_t)p.spikes;
+            }
+            *last=p.spikes;
+            return total;
+        }
+        reference_batch batch={.p=p,.steps=steps};
+        myrk_parallel(reference_partition,&batch);
+        for(int i=0;i<myrk_cpu_threads();++i) {
+            total+=batch.totals[i]; p.spikes+=batch.last[i];
+        }
+    } else total=MYRK_ADVANCE(&p,steps);
+    *last=p.spikes;
+    return total;
 }
 static double now(void) {
     struct timespec ts;
@@ -60,8 +102,9 @@ int main(int argc, char **argv) {
     const int validate = strcmp(argv[1],"validate")==0;
     const int trace = strcmp(argv[1],"trace")==0;
     if (!validate && !trace && strcmp(argv[1],"run")) return 2;
-    if (strcmp(argv[2],"myrk") && strcmp(argv[2],"c")) return 2;
+    if (strcmp(argv[2],"myrk") && strcmp(argv[2],"c") && strcmp(argv[2],"myrk_step")) return 2;
     const int reference = strcmp(argv[2],"c")==0;
+    const int batch = BATCH_SCHEDULE && strcmp(argv[2],"myrk_step");
     const int32_t n=positive(argv[3]), steps=positive(argv[4]);
     REAL *v=myrk_alloc(n,sizeof(REAL)), *u=myrk_alloc(n,sizeof(REAL));
     initialize(n,v,u);
@@ -70,9 +113,16 @@ int main(int argc, char **argv) {
         vr=myrk_alloc(n,sizeof(REAL)); ur=myrk_alloc(n,sizeof(REAL)); initialize(n,vr,ur);
     }
     uint64_t spikes=0;
+    int32_t last=0;
+    double pool_start=now();
+    int threads=batch ? myrk_cpu_threads() : 1;
+    double pool_startup_ms=(now()-pool_start)*1000.0;
     const double start=now();
-    for (int32_t t=0;t<steps;++t) {
+    if (batch && !trace && !validate) {
+        spikes=advance(reference,n,v,u,(uint32_t)steps,&last);
+    } else for (int32_t t=0;t<steps;++t) {
         const int32_t fired=update(reference,n,v,u);
+        last=fired;
         spikes+=(uint64_t)fired;
         if (validate) {
             if (reference_step(n,vr,ur,A,B,C,D,DT,INPUT)!=fired) {
@@ -91,6 +141,20 @@ int main(int argc, char **argv) {
         }
     }
     const double seconds=now()-start;
+    if (validate && batch) {
+        const uint64_t expected=spikes;
+        const int32_t expected_last=last;
+        initialize(n,v,u);
+        spikes=advance(reference,n,v,u,(uint32_t)steps,&last);
+        if (spikes!=expected || last!=expected_last) {
+            fputs("batch spike count mismatch\n",stderr); return 1;
+        }
+        for (int32_t i=0;i<n;++i) {
+            if (!isfinite(v[i]) || !isfinite(u[i]) || v[i]!=vr[i] || u[i]!=ur[i]) {
+                fprintf(stderr,"batch state mismatch at neuron %d\n",i); return 1;
+            }
+        }
+    }
     if (!trace) {
         double sum_v=0,sum_u=0;
         for (int32_t i=0;i<n;++i) {
@@ -99,8 +163,9 @@ int main(int argc, char **argv) {
         }
         printf("{\"seconds\":%.17g,\"spikes\":%" PRIu64 ",\"sum_v\":%.17g,\"sum_u\":%.17g,"
                "\"state_hash\":\"%016" PRIx64 "\",\"peak_rss_kib\":%ld,"
+               "\"threads\":%d,\"pool_startup_ms\":%.17g,\"last_spikes\":%d,"
                "\"max_abs_error\":0,\"passed\":true}\n",
-               seconds,spikes,sum_v,sum_u,hash_state(n,v,u),peak_rss_kib());
+               seconds,spikes,sum_v,sum_u,hash_state(n,v,u),peak_rss_kib(),threads,pool_startup_ms,last);
     }
     free(vr);free(ur);free(v);free(u);
     return 0;

@@ -34,13 +34,47 @@ static int32_t myrk_izh_{dtype}_step(int32_t n,
 
 
 def batch_kernel(dtype):
-    return f'''
-static uint64_t myrk_izh_{dtype}_advance(myrk_population_{dtype} *p, uint32_t steps) {{
+    return f'''typedef struct {{
+    myrk_population_{dtype} *p;
+    uint32_t steps;
+    uint64_t totals[MYRK_MAX_THREADS];
+    int32_t last[MYRK_MAX_THREADS];
+}} myrk_batch_{dtype};
+static void myrk_izh_{dtype}_partition(int id, int width, void *context) {{
+    myrk_batch_{dtype} *batch = context;
+    const myrk_population_{dtype} state = *batch->p;
+    const myrk_population_{dtype} *p = &state;
+    int32_t begin = (int32_t)((int64_t)p->size * id / width);
+    int32_t end = (int32_t)((int64_t)p->size * (id+1) / width);
     uint64_t total = 0;
-    for (uint32_t t = 0; t < steps; ++t) {{
-        p->spikes = myrk_izh_{dtype}_step(p->size, p->v, p->u,
+    int32_t last = 0;
+    for (uint32_t t = 0; t < batch->steps; ++t) {{
+        last = myrk_izh_{dtype}_step(end-begin, p->v+begin, p->u+begin,
             p->a, p->b, p->c, p->d, p->dt, p->current);
-        total += (uint64_t)p->spikes;
+        total += (uint64_t)last;
+    }}
+    batch->totals[id] = total;
+    batch->last[id] = last;
+}}
+static uint64_t myrk_izh_{dtype}_advance(myrk_population_{dtype} *p, uint32_t steps) {{
+    if (!steps) return 0;
+    if (!p->size) {{ p->spikes=0; return 0; }}
+    if (myrk_cpu_threads() == 1) {{
+        uint64_t total=0;
+        for (uint32_t t=0; t<steps; ++t) {{
+            p->spikes=myrk_izh_{dtype}_step(p->size,p->v,p->u,
+                p->a,p->b,p->c,p->d,p->dt,p->current);
+            total+=(uint64_t)p->spikes;
+        }}
+        return total;
+    }}
+    myrk_batch_{dtype} batch = {{.p=p, .steps=steps}};
+    myrk_parallel(myrk_izh_{dtype}_partition, &batch);
+    uint64_t total=0;
+    p->spikes=0;
+    for (int i=0; i<myrk_cpu_threads(); ++i) {{
+        total += batch.totals[i];
+        p->spikes += batch.last[i];
     }}
     return total;
 }}

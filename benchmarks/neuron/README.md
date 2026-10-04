@@ -95,3 +95,36 @@ then scalar tails. Scalar `fmul sN` alone is not NEON vectorization. Record
 vectorization misses, spills and branch behavior before choosing intrinsics.
 No global fast-math. Android thermal state/big.LITTLE placement are manual
 metadata for now; repeated sessions and sustained workloads are still needed.
+
+## Comparar o caminho anterior com batching / multicore
+
+```sh
+python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 --threads 1 --summary --output izh-1.json
+python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 --threads 2 --summary --output izh-2.json
+python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 --threads 4 --summary --output izh-4.json
+```
+
+Agora `--schedule batch` é o default. O relatório contém Myrk batch, C batch
+com **o mesmo pool e número de threads**, e `myrk_step` com o caminho anterior
+single-thread. `speedup_vs_single_thread_step` mede paralelismo + scheduling;
+não significa vantagem sobre C com os mesmos recursos. Para reproduzir o
+schedule original use `--schedule step --threads 1`. Comparar primeiro 1/2/4,
+não presumir que todos os cores vencem em big.LITTLE. Nenhuma afinidade é forçada.
+
+Worker threads têm partições contíguas/disjuntas e avançam todos os passos
+sem barreiras entre timesteps; isso só é válido porque não há comunicação ou
+monitor intermediário neste workload. O estado não é comprimido em 97 grupos:
+cada um dos N neurônios é atualizado exatamente steps vezes.
+
+Há gate adicional de batch vs C sequencial, conferindo **todos os estados**,
+total de spikes e contagem do último passo, inclusive prefixos 1/2/7/31/80.
+O gate por timestep do kernel original continua ativo. Não alegar que o batch
+produz um stream de spikes por timestep; ele só retorna total e último count.
+
+`pool_startup_median_ms` inclui pthread_create e espera de prontidão dos
+workers; fica fora do kernel. Uma nova população/processo é criada por amostra,
+com pool pronto antes do timer. Process time inclui startup/join/hash/IO.
+O runtime do compilador reutiliza o mesmo pool entre lotes; testes cobrem isso.
+A ordem das três variantes gira a cada repetição. No schedule step, usa duas
+variantes. Os arquivos JSON preservam amostras e comparações; --summary apenas
+reduz a impressão no terminal, sem remover os gates de corretude.

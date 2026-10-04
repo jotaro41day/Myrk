@@ -1,6 +1,7 @@
 from .ir import Instruction, Module, Value
 from .neural import kernel, batch_kernel
 from .optimize import batch_populations
+from .runtime_cpu import PTHREAD_RUNTIME
 
 
 C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool"}
@@ -209,7 +210,10 @@ class CGenerator:
                     yield item.data.precision
                 elif item.op == "for":
                     yield from precisions(item.args[2])
-        for dtype in sorted({dtype for p in module.procedures for dtype in precisions(p.body)}):
+        neural_types = sorted({dtype for p in module.procedures for dtype in precisions(p.body)})
+        if neural_types:
+            lines.append(PTHREAD_RUNTIME)
+        for dtype in neural_types:
             lines.append(kernel(dtype))
             lines.append(batch_kernel(dtype))
         for procedure in module.procedures:
