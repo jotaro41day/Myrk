@@ -36,6 +36,9 @@ para laços. Clang ou GCC produz o executável nativo com modo numérico conserv
   SNN em escala. Comparar código/tempo de engenharia com MLIR/LLVM após M5.
 - Guardar testes semânticos independentes do backend para permitir substituição.
 - Nenhuma otimização de domínio é alegada nesta etapa.
+- A licença MIT foi escolhida para permitir redistribuir compilador, runtime e
+  exemplos com poucas obrigações. A escolha pode ser revista antes de releases
+  estáveis se dependências futuras exigirem outra política.
 
 ## Evidência e revisão
 
