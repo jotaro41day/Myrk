@@ -95,11 +95,18 @@ class CGenerator:
             lines += end_lines + [assignment]
             count = f"({end} > {start} ? (uint32_t)((int64_t){end} - {start}) : 0)"
             call = f"myrk_izh_{dtype}_advance(&{name}, {count})"
+            lines.append(f"{pad}    if ({end} > {start} && myrk_cpu_threads() > 1) {{")
             if accumulator:
-                lines.append(f"{pad}    {accumulator} = (int32_t)((uint32_t){accumulator} + (uint32_t){call});")
+                lines.append(f"{pad}        {accumulator} = (int32_t)((uint32_t){accumulator} + (uint32_t){call});")
             else:
-                lines.append(f"{pad}    (void){call};")
-            return lines + [f"{pad}}}"]
+                lines.append(f"{pad}        (void){call};")
+            lines.append(f"{pad}    }} else {{")
+            original = item.args[2]
+            fallback = Instruction("for", item.pos, original.data,
+                (Value("variable","i32",item.pos,start),
+                 Value("variable","i32",item.pos,end),original.args[2]))
+            lines.extend(self.statement(fallback, indent + 2))
+            return lines + [f"{pad}    }}",f"{pad}}}"]
         if item.op == "population":
             spec = item.data
             name = spec.name

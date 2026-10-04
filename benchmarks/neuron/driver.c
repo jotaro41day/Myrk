@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     int threads=batch ? myrk_cpu_threads() : 1;
     double pool_startup_ms=(now()-pool_start)*1000.0;
     const double start=now();
-    if (batch && !trace && !validate) {
+    if (batch && threads > 1 && !trace && !validate) {
         spikes=advance(reference,n,v,u,(uint32_t)steps,&last);
     } else for (int32_t t=0;t<steps;++t) {
         const int32_t fired=update(reference,n,v,u);

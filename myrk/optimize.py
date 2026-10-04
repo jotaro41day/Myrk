@@ -26,7 +26,7 @@ def batch_populations(module):
                         accumulator=update.data
             if eligible:
                 name,dtype=children[0].data
-                result.append(Instruction('advance',item.pos,(name,dtype,accumulator),(start,end)))
+                result.append(Instruction('advance',item.pos,(name,dtype,accumulator),(start,end,item)))
             else:
                 result.append(replace(item,args=(start,end,block(children))))
         return tuple(result)
