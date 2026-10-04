@@ -1,0 +1,11 @@
+fn square(x: f32) -> f32 {
+    return x * x;
+}
+
+fn main() -> i32 {
+    let value: f32 = square(1.5f32);
+    print(value);
+    print(2.5 + 1.25);
+    print(value > 2.0f32);
+    return 0;
+}

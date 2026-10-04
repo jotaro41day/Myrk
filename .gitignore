@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.mypy_cache/
+build/
+dist/
+*.o
+*.out
+*.so
+*.dylib
+*.dll
+*.exe
+benchmarks/results/

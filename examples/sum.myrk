@@ -1,0 +1,12 @@
+fn triangular(n: i32) -> i32 {
+    var total: i32 = 0;
+    for i in 0..n {
+        total = total + i;
+    }
+    return total;
+}
+
+fn main() -> i32 {
+    print(triangular(10));
+    return 0;
+}

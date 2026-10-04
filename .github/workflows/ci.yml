@@ -1,0 +1,27 @@
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Check syntax and installer
+        run: |
+          python3 -m compileall -q myrk benchmarks tests
+          sh -n install.sh
+      - name: Run examples
+        run: |
+          python3 -m myrk run examples/hello.myrk
+          python3 -m myrk run examples/sum.myrk
+          python3 -m myrk run examples/numeric.myrk
+      - name: Validate benchmark harness
+        run: |
+          python3 benchmarks/run.py --repeat 1 --warmup 0
+          python3 -m benchmarks.lif --neurons 64 --steps 200 --repeat 1
