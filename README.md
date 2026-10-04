@@ -13,7 +13,7 @@ SIMD explícito ou paralelismo. Não há alegação de vantagem de desempenho.
 
 ## Começar
 
-Requer Python 3 e Clang ou GCC. Na cópia do repositório:
+Requer Python 3.10+ e Clang ou GCC. Na cópia do repositório:
 
 ```sh
 python3 -m myrk run examples/hello.myrk
