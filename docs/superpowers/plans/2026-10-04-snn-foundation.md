@@ -25,7 +25,7 @@ returns; type/precision mismatches; exact threshold/reset order and vector tails
   native monotonic kernel timing, all-state differential check before timing,
   bounded scale sweep, compiler/hardware/flags/raw samples, RSS and memory model.
   Compare strict variants, inspect assembly, record evidence, commit.
-- [ ] Revise ROADMAP, PERFORMANCE, MILLION_NEURON_PLAN, README and CI. Publish
+- [x] Revise ROADMAP, PERFORMANCE, MILLION_NEURON_PLAN, README and CI. Publish
   exact commits to existing GitHub repository and verify remote CI.
 
 Deferred: connected SNN, spike representations, multicore, NEON intrinsics,

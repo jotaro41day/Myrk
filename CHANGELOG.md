@@ -15,3 +15,4 @@
 - Laboratório Izhikevich com gate C/Python, escala 1K–10M, memória, tempo nativo e artefatos de assembly.
 - Roadmap SNN e MILLION_NEURON_PLAN com medições x86 e validação Android pendente.
 - Correção de duplo arredondamento em parâmetros f32.
+- CI Linux com matriz GCC/Clang; testes nativos respeitam CC. Estado de retomada em docs/DEVELOPMENT_STATE.md.

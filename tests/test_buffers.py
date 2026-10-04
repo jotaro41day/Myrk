@@ -1,4 +1,5 @@
 import shutil
+import os
 import subprocess
 import tempfile
 from pathlib import Path
@@ -14,7 +15,8 @@ from myrk.semantics import check
 def native(source):
     with tempfile.TemporaryDirectory() as directory:
         binary = Path(directory) / 'test'
-        build(generate(check(parse(source))), binary, shutil.which('clang') or shutil.which('cc'))
+        build(generate(check(parse(source))), binary,
+              os.environ.get('CC') or shutil.which('clang') or shutil.which('cc'))
         return subprocess.run([str(binary)], capture_output=True, text=True)
 
 

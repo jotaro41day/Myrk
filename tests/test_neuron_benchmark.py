@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -38,7 +39,7 @@ class NeuronBenchmarkTests(unittest.TestCase):
 
     def test_native_gate_rejects_corrupted_model(self):
         from benchmarks.neuron.izhikevich import build_driver, checked
-        cc=shutil.which('clang') or shutil.which('cc')
+        cc=os.environ.get('CC') or shutil.which('clang') or shutil.which('cc')
         with tempfile.TemporaryDirectory() as directory:
             binary,metadata=build_driver(directory,'f32',cc,'O2')
             generated=Path(directory)/'population-f32.c'

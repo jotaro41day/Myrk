@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import shutil
 import subprocess
 import tempfile
@@ -9,6 +10,9 @@ from myrk.codegen_c import generate
 from myrk.lexer import MyrkError, lex
 from myrk.parser import parse
 from myrk.semantics import check
+
+
+CC = os.environ.get("CC") or shutil.which("clang") or shutil.which("cc")
 
 
 class FrontendTests(unittest.TestCase):
@@ -60,7 +64,7 @@ class NativeTests(unittest.TestCase):
         source = compile_source(Path("examples") / name)
         with tempfile.TemporaryDirectory() as directory:
             executable = Path(directory) / "program"
-            build(source, executable, shutil.which("clang") or shutil.which("cc"))
+            build(source, executable, CC)
             return subprocess.run([str(executable)], text=True, capture_output=True)
 
     def test_hello(self):
@@ -79,7 +83,7 @@ class NativeTests(unittest.TestCase):
         source = generate(check(parse("fn main() -> i32 { print(1 / 0); return 0; }")))
         with tempfile.TemporaryDirectory() as directory:
             executable = Path(directory) / "program"
-            build(source, executable, shutil.which("clang") or shutil.which("cc"))
+            build(source, executable, CC)
             result = subprocess.run([str(executable)], text=True, capture_output=True)
         self.assertEqual(result.returncode, 70)
         self.assertIn("invalid i32 division", result.stderr)
@@ -91,7 +95,7 @@ fn main() -> i32 { print(echo(1) + echo(2)); return 0; }
 """)))
         with tempfile.TemporaryDirectory() as directory:
             executable = Path(directory) / "program"
-            build(source, executable, shutil.which("clang") or shutil.which("cc"))
+            build(source, executable, CC)
             result = subprocess.run([str(executable)], text=True, capture_output=True)
         self.assertEqual((result.returncode, result.stdout), (0, "1\n2\n3\n"))
 
