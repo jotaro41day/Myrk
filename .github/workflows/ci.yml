@@ -21,7 +21,10 @@ jobs:
           python3 -m myrk run examples/hello.myrk
           python3 -m myrk run examples/sum.myrk
           python3 -m myrk run examples/numeric.myrk
+          python3 -m myrk run examples/vector.myrk
+          python3 -m myrk run examples/izhikevich.myrk
       - name: Validate benchmark harness
         run: |
           python3 benchmarks/run.py --repeat 1 --warmup 0
           python3 -m benchmarks.lif --neurons 64 --steps 200 --repeat 1
+          python3 -m benchmarks.neuron.izhikevich --sizes 17 1000 --steps 80 --repeat 1 --warmup 0
