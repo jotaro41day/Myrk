@@ -40,10 +40,10 @@ que a diferença de desempenho observada; não há conclusão de vantagem.
 
 ### Termux/AArch64 — execução relatada em 2026-10-04
 
-Android 15, AArch64, Clang do Termux em
-`/data/data/com.termux/files/usr/bin/clang`. Modelo do aparelho e versões de
-Python/Clang ainda não informados; estado térmico também não registrado. Os
-17 testes passaram em 5,572 s. Benchmark: 7 amostras após 2 warmups; checksum
+Android 15, AArch64, modelo `25078PC3EG`, Python 3.14.6 e Clang 21.1.8 em
+`/data/data/com.termux/files/usr/bin/clang`. Versão do aplicativo Termux e
+estado térmico ainda não informados. Os 17 testes passaram em 5,572 s.
+Benchmark: 7 amostras após 2 warmups; checksum
 `149999997` para Myrk e C.
 
 | Variante | Mediana | Faixa | Compile time | Pico RSS | Binário |
