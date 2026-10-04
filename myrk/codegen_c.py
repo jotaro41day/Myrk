@@ -1,4 +1,5 @@
 from .ir import Instruction, Module, Value
+from .neural import kernel
 
 
 C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool"}
@@ -27,6 +28,14 @@ class CGenerator:
         return f"{'    ' * indent}{C_TYPES[dtype]} {name} = {expression};", name
 
     def value(self, item: Value, indent: int) -> tuple[list[str], str]:
+        if item.op == "spikes":
+            return [], f"{item.data}.spikes"
+        if item.op in ("voltage", "recovery"):
+            lines, index = self.value(item.args[0], indent)
+            field = "v" if item.op == "voltage" else "u"
+            assignment, name = self.temporary(item.dtype,
+                f"{item.data}.{field}[myrk_index({index}, {item.data}.size)]", indent)
+            return lines + [assignment], name
         if item.op == "load":
             lines, index = self.value(item.args[0], indent)
             assignment, name = self.temporary(item.dtype,
@@ -74,6 +83,26 @@ class CGenerator:
 
     def statement(self, item: Instruction, indent: int) -> list[str]:
         pad = "    " * indent
+        if item.op == "population":
+            spec = item.data
+            name = spec.name
+            lines, size = self.value(spec.size, indent)
+            lines += [f"{pad}myrk_population_{spec.precision} {name};",
+                      f"{pad}{name}.size = {size};", f"{pad}{name}.spikes = 0;"]
+            for parameter in spec.parameters:
+                _, value = self.value(parameter.value, indent)
+                lines.append(f"{pad}{name}.{parameter.name} = {value};")
+            for state in ("v", "u"):
+                lines.append(f"{pad}{name}.{state} = myrk_alloc({name}.size, sizeof({C_TYPES[spec.precision]}));")
+                self.resources[-1].append(f"{name}.{state}")
+            lines += [f"{pad}for (int32_t i = 0; i < {name}.size; ++i) {{",
+                      f"{pad}    {name}.v[i] = {name}.c;",
+                      f"{pad}    {name}.u[i] = {name}.b * {name}.c;", f"{pad}}}"]
+            return lines
+        if item.op == "step":
+            name, dtype = item.data
+            args = ', '.join(f"{name}.{field}" for field in ("size", "v", "u", "a", "b", "c", "d", "dt", "current"))
+            return [f"{pad}{name}.spikes = myrk_izh_{dtype}_step({args});"]
         if item.op == "buffer":
             name, dtype = item.data
             lines, size = self.value(item.args[0], indent)
@@ -158,6 +187,14 @@ class CGenerator:
                  "    }",
                  "    return a % b;",
                  "}"]
+        def precisions(body):
+            for item in body:
+                if item.op == "population":
+                    yield item.data.precision
+                elif item.op == "for":
+                    yield from precisions(item.args[2])
+        for dtype in sorted({dtype for p in module.procedures for dtype in precisions(p.body)}):
+            lines.append(kernel(dtype))
         for procedure in module.procedures:
             params = ", ".join(f"{C_TYPES[dtype]} {name}" for name, dtype in procedure.params) or "void"
             lines.append(f"static {C_TYPES[procedure.result]} myrk_f_{procedure.name}({params});")

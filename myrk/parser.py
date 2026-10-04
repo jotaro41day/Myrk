@@ -69,6 +69,31 @@ class Parser:
         if token.kind != "ident":
             raise MyrkError(token.pos, "expected a statement")
         self.index += 1
+        if token.text == "population":
+            name = self.name()
+            self.take(":")
+            model = self.name()
+            self.take("<")
+            precision = self.name()
+            self.take(">")
+            self.take("(")
+            params = []
+            if self.current.kind != ")":
+                while True:
+                    param = self.name()
+                    self.take("=")
+                    params.append((param.text, self.expression()))
+                    if not self.match(","):
+                        break
+            self.take(")")
+            self.take(";")
+            return Stmt("population", token.pos, (name.text, model.text, precision.text), tuple(params))
+        if token.text == "step":
+            self.take("(")
+            name = self.name()
+            self.take(")")
+            self.take(";")
+            return Stmt("step", token.pos, name.text)
         if token.text == "buffer":
             name = self.name()
             self.take(":")

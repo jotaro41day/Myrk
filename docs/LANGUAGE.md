@@ -21,8 +21,7 @@
 - O compilador informa arquivo, linha e coluna nos erros de sintaxe e tipos.
   O runtime só informa a categoria da falha de divisão.
 
-Não há ainda módulos, imports, strings, threads, tensores ou
-construções SNN. Os programas são compilados AOT para C11 e depois para um
+Não há ainda módulos, imports, strings, threads ou tensores. Os programas são compilados AOT para C11 e depois para um
 executável nativo por um compilador C externo.
 
 ## Buffers locais
@@ -34,3 +33,20 @@ com código 70. Um buffer vazio é válido. O índice é avaliado/verificado ant
 do valor a armazenar. Buffers são liberados no fim do escopo, inclusive em
 retornos antecipados; não podem ser copiados, passados ou retornados ainda.
 Veja `examples/vector.myrk` (resultado 2048).
+
+## Populações Izhikevich
+
+`examples/izhikevich.myrk` compila uma população nativa. A declaração exige
+`Izhikevich<f32>` ou `<f64>` e parâmetros nomeados `size`, `a`, `b`, `c`, `d`,
+`dt`, `current`. size é uma expressão i32; os demais são literais finitos da
+precisão escolhida. dt deve ser positivo. A população possui buffers SoA v/u
+inicializados com `v=c`, `u=b*c`, liberados no fim do escopo/retorno.
+
+`step(p);` integra todos os neurônios uma vez, sem alocações. `spikes(p)`
+retorna i32 com a contagem **do último passo** (zero antes do primeiro).
+`voltage(p,i)`/`recovery(p,i)` consultam estado, com índice verificado.
+Somente funções de consulta e step aceitam populações; não há cópia ou escape.
+O solver é Euler simultâneo, dt em ms, threshold >=30 após integração e reset
+v=c, u=u_next+d. Fórmulas e ordem exatas: [ADR 0002](decisions/0002-snn-populations.md).
+Não é o solver clássico com dois meios passos. Não há lista de spikes,
+sinapses, delays, monitores automáticos ou seleção de solver ainda.

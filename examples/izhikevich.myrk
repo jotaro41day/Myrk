@@ -1,0 +1,15 @@
+// 100 ms, 1000 independent neurons. No synapses or recording.
+fn main() -> i32 {
+    population cells: Izhikevich<f32>(size=1000,
+        a=0.02f32, b=0.2f32, c=-65.0f32, d=8.0f32,
+        dt=0.5f32, current=10.0f32);
+    var total: i32 = 0;
+    for t in 0..200 {
+        step(cells);
+        total = total + spikes(cells);
+    }
+    print(total);
+    print(voltage(cells,0));
+    print(recovery(cells,0));
+    return 0;
+}

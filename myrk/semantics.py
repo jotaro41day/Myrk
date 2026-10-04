@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+import math
+import struct
 
-from .ir import Instruction, Module, Procedure, Value
+from .ir import Instruction, Module, Procedure, Value, PopulationSpec, UniformParameter
 from .lexer import MyrkError
 from .syntax import Expr, Function, Pos, Stmt
 
@@ -46,7 +48,7 @@ class Checker:
 
     def check(self) -> Module:
         for function in self.functions:
-            if function.name in self.signatures or function.name == "print":
+            if function.name in self.signatures or function.name in {"print", "step", "spikes", "voltage", "recovery"}:
                 raise MyrkError(function.pos, f"duplicate or reserved function {function.name!r}")
             params = tuple(self.type_name(t, p) for _, t, p in function.params)
             result = self.type_name(function.result, function.pos)
@@ -81,6 +83,35 @@ class Checker:
 
     def statement(self, statement: Stmt) -> Instruction:
         op = statement.kind
+        if op == "population":
+            name, model, dtype = statement.value
+            if model != "Izhikevich":
+                raise MyrkError(statement.pos, f"unknown neuron model {model!r}")
+            if dtype not in ("f32", "f64"):
+                raise MyrkError(statement.pos, "population precision must be f32 or f64")
+            params = dict(statement.args)
+            if len(params) != len(statement.args):
+                raise MyrkError(statement.pos, "duplicate population parameter")
+            names = ("a", "b", "c", "d", "dt", "current")
+            if set(params) != {"size", *names}:
+                raise MyrkError(statement.pos, "population parameters must be size, a, b, c, d, dt, current")
+            size = self.expression(params["size"])
+            self.require(size, "i32", size.pos)
+            uniform = []
+            for param in names:
+                expr = params[param]
+                value = self.expression(expr)
+                self.require(value, dtype, value.pos)
+                number = self.literal_float(expr, dtype)
+                if param == "dt" and number <= 0:
+                    raise MyrkError(expr.pos, "dt must be positive")
+                uniform.append(UniformParameter(param, Value("constant", dtype, expr.pos, repr(number))))
+            symbol = self.add_symbol(name, dtype, False, statement.pos, "population")
+            spec = PopulationSpec(symbol.cname, dtype, size, tuple(uniform))
+            return Instruction(op, statement.pos, spec)
+        if op == "step":
+            symbol = self.population(statement.value, statement.pos)
+            return Instruction(op, statement.pos, (symbol.cname, symbol.dtype))
         if op == "buffer":
             name, dtype = statement.value
             if dtype not in ("f32", "f64"):
@@ -137,6 +168,29 @@ class Checker:
         self.require(index, "i32", index.pos)
         return symbol, index
 
+    def population(self, name, pos):
+        symbol = self.lookup(name, pos)
+        if symbol.kind != "population":
+            raise MyrkError(pos, f"{name!r} is not a population")
+        return symbol
+
+    def literal_float(self, expr, dtype):
+        sign = 1
+        literal = expr
+        if expr.kind == "unary" and expr.value == "-":
+            sign, literal = -1, expr.args[0]
+        if literal.kind != "float":
+            raise MyrkError(expr.pos, "uniform parameter currently requires a floating literal")
+        number = sign * float(literal.value.removesuffix("f32").removesuffix("f64"))
+        try:
+            if dtype == "f32":
+                number = struct.unpack('f', struct.pack('f', number))[0]
+        except OverflowError:
+            number = math.inf
+        if not math.isfinite(number):
+            raise MyrkError(expr.pos, "uniform parameter must be finite in its precision")
+        return number
+
     def expression(self, expr: Expr) -> Value:
         if expr.kind == "load":
             symbol, index = self.buffer_index(expr.value, expr.args[0], expr.pos)
@@ -158,6 +212,17 @@ class Checker:
                 raise MyrkError(expr.pos, f"expected scalar, found {symbol.kind}")
             return Value("variable", symbol.dtype, expr.pos, symbol.cname)
         if expr.kind == "call":
+            if expr.value in ("spikes", "voltage", "recovery"):
+                count = 1 if expr.value == "spikes" else 2
+                if len(expr.args) != count or expr.args[0].kind != "name":
+                    raise MyrkError(expr.pos, f"{expr.value} expects a population name and {count-1} indices")
+                symbol = self.population(expr.args[0].value, expr.pos)
+                args = ()
+                if count == 2:
+                    index = self.expression(expr.args[1])
+                    self.require(index, "i32", index.pos)
+                    args = (index,)
+                return Value(expr.value, "i32" if count == 1 else symbol.dtype, expr.pos, symbol.cname, args)
             signature = self.signatures.get(expr.value)
             if signature is None:
                 raise MyrkError(expr.pos, f"unknown function {expr.value!r}")

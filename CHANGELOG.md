@@ -11,3 +11,4 @@
 
 - Buffers locais contíguos f32/f64, índices verificados e liberação por escopo.
 - Prioridade SNN/Izhikevich documentada no ADR 0002.
+- Populações Izhikevich f32/f64 na IR e no backend CPU; referência arredondada por operação.

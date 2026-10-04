@@ -31,3 +31,21 @@ class Procedure:
 @dataclass(frozen=True)
 class Module:
     procedures: tuple[Procedure, ...]
+
+
+@dataclass(frozen=True)
+class UniformParameter:
+    name: str
+    value: Value
+    uniformity: str = "uniform"
+
+
+@dataclass(frozen=True)
+class PopulationSpec:
+    name: str
+    precision: str
+    size: Value
+    parameters: tuple[UniformParameter, ...]
+    model: str = "Izhikevich"
+    solver: str = "euler_simultaneous"
+    layout: str = "soa"
