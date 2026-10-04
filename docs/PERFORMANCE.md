@@ -187,3 +187,77 @@ troca global para O3 por falta de ganho consistente. Não escrever intrinsics
 NEON enquanto o código gerado já vetoriza e falta medição Android. Registrar
 GCC como alvo a investigar (if-conversion/cost model), sem fast-math escondida.
 Próximo gate: Termux real, layout/memória e SpikeSet antes de multicore/CSR.
+
+## Experimento 0004 — batches independentes e pool persistente
+
+Hipótese: quando não há observação ou comunicação entre passos, cada partição
+pode executar todos os timesteps sem barreiras globais. Isso preserva trabalho
+e aritmética, remove sincronização por timestep e permite multicore. É válido
+somente para o modelo independente atual. Ver ADR 0003 para a prova/limites.
+
+Probe descartável anterior com Clang/Xeon, 1M f32/200 passos: loop convencional
+~192 ms; tile256 ~288 ms; manter estado em vetores durante muitos passos com
+1/2/4 grupos ~781/338/201 ms. O gargalo de dependência e paralelismo dentro do
+núcleo anulou a redução de tráfego nesse probe. Não mantivemos SIMD manual
+nem anunciamos ganho; isso não descarta futuras variantes medidas em Android.
+
+Mudança: passe de IR reconhece somente loop com step(p) ou step+acumulação
+modular i32 de spikes. Bounds têm avaliação única e ordenada. O runtime
+MYRK_THREADS=1..64 divide índices contíguos entre workers pthread persistentes;
+main participa; redução só ao final. Não há alocação, thread creation, atomics
+globais por spike ou barreira por timestep. Estado segue SoA e parâmetros são
+uniformes. Workers anunciam prontidão antes de cronometrar o kernel.
+
+Gate: C sequencial por timestep, batch vs C com **todos** os estados e contagens,
+prefixos 1/2/7/31/80; f32/f64, tails, população menor que pool, reutilização,
+range vazio/negativo, bounds com efeitos e overflow modular. 47 testes passaram
+com GCC14.2 e Clang19.1.7. Exemplo Izhikevich com quatro threads passou em GCC
+ThreadSanitizer. Revisão independente não encontrou corrida após acrescentar
+handshake de prontidão. Assembly cross AArch64 do callback mantém NEON .4s,
+width4/interleave2, sem FMA; ainda não é execução Android.
+
+Medição final: código f89a252, Xeon Platinum 8573C, Linux cloud com quota de
+**2 CPUs**, Clang19.1.7 O2 estrito, 1M neurônios × 200 passos, dt=.5 ms,
+100 ms biológicos, 2 warmups e 5 amostras. Ordem das variantes gira. Pool
+criado fora do timer, custo separado no JSON; wall/process inclui tudo.
+Não comparamos com um antigo resultado em outro dispositivo.
+
+| dtype | threads Myrk/C | Myrk ms | C mesmos recursos ms | Myrk antigo 1 thread ms | M updates/s | ganho vs antigo | realtime |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| f32 | 1 | 178.559 | 173.957 | 190.449 | 1120.1 | 1.07× | 0.560 |
+| f64 | 1 | 391.992 | 380.841 | 379.939 | 510.2 | 0.97× | 0.255 |
+| f32 | 2 | 90.475 | 96.506 | 179.536 | 2210.5 | 1.98× | 1.105 |
+| f64 | 2 | 202.799 | 193.299 | 391.916 | 986.2 | 1.93× | 0.493 |
+| f32 | 4 | 92.885 | 102.888 | 176.920 | 2153.2 | 1.90× | 1.077 |
+| f64 | 4 | 239.703 | 261.629 | 384.983 | 834.4 | 1.61× | 0.417 |
+
+Uma thread preserva o loop original, sem chamar o executor paralelo; pequenas
+diferenças nessa linha não são otimização, mas variação das medições. O piloto
+do caminho de uma thread via callback regrediu (~7%) e foi restringido: o
+compilador mantém o loop original quando MYRK_THREADS=1. Quatro threads não
+superaram duas neste host limitado a duas CPUs; Android requer medição própria.
+
+Os ~1,98× em f32 / ~1,93× em f64 são ganhos sobre Myrk **single-thread**,
+não sobre C paralelo. C com o mesmo pool é competitivo; não há prova de
+liderança sobre simuladores fortes. Em f32/2 threads, 1M updates independentes
+atinge realtime >1 neste Xeon, **não** numa rede conectada ou num celular.
+
+JSON completo: [1 thread](measurements/2026-10-04-pool-1.json),
+[2 threads](measurements/2026-10-04-pool-2.json),
+[4 threads](measurements/2026-10-04-pool-4.json).
+
+```sh
+for threads in 1 2 4; do
+  CC=clang python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --steps 200 \
+    --repeat 5 --warmup 2 --threads "$threads" --summary --output "izh-$threads.json"
+done
+```
+
+Trecho Android fornecido pelo usuário antes desta mudança: mediana 511,251 ms,
+391,197 M updates/s, 3M spikes, hash `3bbedd68576516eb`. O hash coincide com o
+caso local f32/1M/200. Faltam no recorte os cabeçalhos e identificação Myrk/C;
+não atribuímos essa medição ao pool nem inferimos ganho Android a partir dela.
+
+Decisão: manter pool opcional, default uma thread e fallback original;
+publicar comparação 1/2/4 com JSON e resumo curto. Medir no Termux antes de
+selecionar número de threads/afinidade ou agendamento para big.LITTLE.

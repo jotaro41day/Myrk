@@ -79,3 +79,13 @@ bucket/delay. Reconstrução só ganha se custo computacional compensar tráfego
 4. Pool persistente e scheduling estático/dinâmico, com baseline single-thread.
 5. CSR, propagação, delays e rede conectada; não substituir métricas de rede
    pelas de neurônios independentes.
+
+
+## Incremento multicore (mesmo modelo; 200 passos, 100 ms simulados)
+
+1M f32 no Xeon/Clang19, 2 threads: 90,475 ms, 2210,5 M updates/s, realtime
+1,105×, ganho 1,98× sobre Myrk antigo single-thread da mesma sessão. C paralelo:
+96,506 ms. F64/2 threads: 202,799 ms, 986,2 M updates/s, realtime 0,493×.
+As tabelas iniciais acima continuam sendo resultados históricos single-thread
+com 100 passos. Não misturar durações/custos. O pool ainda não foi medido no
+Android. Ver experimento 0004 em PERFORMANCE e raw JSON pool-1/pool-2/pool-4.

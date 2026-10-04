@@ -20,10 +20,23 @@ validado para preservar o progresso se a sessão terminar.
   Laboratório compara todos os estados e spikes antes de reportar desempenho.
 - Sweep 1K/10K/100K/1M/2M/5M/10M f32/f64 em Xeon, GCC O2/O3 e Clang O2.
   Dados preservados em docs/measurements, resumo em PERFORMANCE/MILLION_NEURON_PLAN.
-- 38 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
+- 47 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
   passaram com ASan/UBSan. CI Linux passa; matriz GCC/Clang verifica ambos.
 - Revisão corrigiu duplo arredondamento de parâmetros f32: preservar decimal
   original no C, limites exatos com Fraction. Não reintroduzir conversão via f64.
+
+## Incremento de desempenho publicado
+
+Loops independentes sem observação intermediária agora têm IR de batch e
+pool pthread persistente via MYRK_THREADS=1..64. Uma thread mantém o loop
+original; mais threads executam partições sem barreiras por timestep. Não
+aplicar isso a futuras redes conectadas sem nova prova de dependências.
+`--threads`, `--schedule`, `--summary` e `--output` no laboratório permitem
+comparar Myrk/C com mesmos recursos e o Myrk antigo single-thread.
+1M f32/200 passos no Xeon com 2 threads: 90,475 ms, 2,21 bilhões updates/s,
+1,98× sobre a variante antiga medida na mesma sessão. 4 threads não ganharam
+sobre 2 no host com quota de 2 CPUs. Estado/hash/spikes idênticos, sem fast-math.
+ThreadSanitizer no exemplo passou. Android do pool ainda precisa de teste.
 
 ## Evidência e limites
 
@@ -45,7 +58,7 @@ não bloquear desenvolvimento por isso.
 2. [#6](https://github.com/jotaro41day/Myrk/issues/6): baseline de bandwidth,
    ablação de layouts/fusão e diagnóstico de vetorização GCC estrita.
 3. [#5](https://github.com/jotaro41day/Myrk/issues/5): SpikeSet e compactação;
-   depois pool persistente, sinapses CSR reais, propagação, delays e híbrido.
+   depois especialização de scheduling do pool existente, sinapses CSR reais, propagação, delays e híbrido.
 4. [#2](https://github.com/jotaro41day/Myrk/issues/2): buffers locais feitos;
    benchmark dedicado para acesso genérico de buffers e passagem entre funções
    ainda não estão implementados. Não tratar o benchmark de população como

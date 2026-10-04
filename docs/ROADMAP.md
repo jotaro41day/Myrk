@@ -17,7 +17,7 @@ a workload/target deve permanecer condicionado, sem fast-math implícita.
 | M4 | Lab 1K→10M, memória, throughput, timestep, realtime, estados e precisão | Sweep CPU x86 realizado; tabela no MILLION_NEURON_PLAN; Termux pendente |
 | M5 | Layout SoA/AoSoA, especialização e NEON/SIMD | SoA baseline; assembly AArch64 confirma autovetorização Clang; escolher mudanças após medições reais no celular |
 | M6 | SpikeSet: máscara, bitset, compactação | Medir atividade/custo de conversão; equivalência e throughput de compactação |
-| M7 | Pool persistente, owner-computes, buffers locais, scheduling | Ganho sobre single-thread por população e topologia; testar big.LITTLE e aquecimento |
+| M7 | Pool persistente, partições contíguas, redução ao final | Implementado para batches independentes; ~1,98× f32 com 2 threads no Xeon. Android/big.LITTLE e redes conectadas pendentes |
 | M8 | Sinapses reais: CSR, índices menores, propagação | Eventos/s, bytes/sinapse, oracle de conectividade; comparar formatos/ordens e conectividade procedural |
 | M9 | Delays limitados, ring/buckets; rede conectada | Spike trace e delays corretos; 1M/fanout 10→100→1000 conforme orçamento |
 | M10 | Estratégias por população/projeção, híbrido/event/time | Crossover medido e semântica preservada; Izhikevich não pode pular passos por ausência de spikes |
