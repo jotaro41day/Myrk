@@ -41,14 +41,12 @@ pedido por `-o`, ou ao lado do fonte sem a extensão. `--help` lista os comandos
 Primeiro alvo de desenvolvimento: CPU AArch64. A instalação usa Python e Clang
 disponíveis no Termux, sem root ou CUDA. **O processo está preparado para
 Termux, mas ainda não foi validado num dispositivo Android real.**
-O repositório remoto ainda depende de permissão de criação no GitHub; o comando
-`git clone` abaixo funcionará após a publicação.
 
 ```sh
 pkg update
 pkg install python clang git coreutils
-git clone https://github.com/jotaro41day/myrk.git
-cd myrk
+git clone https://github.com/jotaro41day/Myrk.git
+cd Myrk
 ./install.sh
 myrk run examples/hello.myrk
 ```
