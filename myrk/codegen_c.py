@@ -1,5 +1,6 @@
 from .ir import Instruction, Module, Value
-from .neural import kernel
+from .neural import kernel, batch_kernel
+from .optimize import batch_populations
 
 
 C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool"}
@@ -83,6 +84,21 @@ class CGenerator:
 
     def statement(self, item: Instruction, indent: int) -> list[str]:
         pad = "    " * indent
+        if item.op == "advance":
+            name, dtype, accumulator = item.data
+            start_lines, start = self.value(item.args[0], indent + 1)
+            assignment, start = self.temporary("i32", start, indent + 1)
+            lines = [f"{pad}{{"] + start_lines + [assignment]
+            end_lines, end = self.value(item.args[1], indent + 1)
+            assignment, end = self.temporary("i32", end, indent + 1)
+            lines += end_lines + [assignment]
+            count = f"({end} > {start} ? (uint32_t)((int64_t){end} - {start}) : 0)"
+            call = f"myrk_izh_{dtype}_advance(&{name}, {count})"
+            if accumulator:
+                lines.append(f"{pad}    {accumulator} = (int32_t)((uint32_t){accumulator} + (uint32_t){call});")
+            else:
+                lines.append(f"{pad}    (void){call};")
+            return lines + [f"{pad}}}"]
         if item.op == "population":
             spec = item.data
             name = spec.name
@@ -195,6 +211,7 @@ class CGenerator:
                     yield from precisions(item.args[2])
         for dtype in sorted({dtype for p in module.procedures for dtype in precisions(p.body)}):
             lines.append(kernel(dtype))
+            lines.append(batch_kernel(dtype))
         for procedure in module.procedures:
             params = ", ".join(f"{C_TYPES[dtype]} {name}" for name, dtype in procedure.params) or "void"
             lines.append(f"static {C_TYPES[procedure.result]} myrk_f_{procedure.name}({params});")
@@ -208,4 +225,4 @@ class CGenerator:
 
 
 def generate(module: Module) -> str:
-    return CGenerator().generate(module)
+    return CGenerator().generate(batch_populations(module))

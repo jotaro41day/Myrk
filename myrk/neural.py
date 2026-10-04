@@ -31,3 +31,17 @@ static int32_t myrk_izh_{dtype}_step(int32_t n,
     return spikes;
 }}
 '''
+
+
+def batch_kernel(dtype):
+    return f'''
+static uint64_t myrk_izh_{dtype}_advance(myrk_population_{dtype} *p, uint32_t steps) {{
+    uint64_t total = 0;
+    for (uint32_t t = 0; t < steps; ++t) {{
+        p->spikes = myrk_izh_{dtype}_step(p->size, p->v, p->u,
+            p->a, p->b, p->c, p->d, p->dt, p->current);
+        total += (uint64_t)p->spikes;
+    }}
+    return total;
+}}
+'''
