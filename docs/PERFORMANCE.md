@@ -38,6 +38,24 @@ tempo C começa diretamente no GCC. O proxy de startup (`print 42`) teve
 medianas 1,803 ms (Myrk) e 1,462 ms (C). A variação entre amostras é maior
 que a diferença de desempenho observada; não há conclusão de vantagem.
 
+### Termux/AArch64 — execução relatada em 2026-10-04
+
+Android 15, AArch64, Clang do Termux em
+`/data/data/com.termux/files/usr/bin/clang`. Modelo do aparelho e versões de
+Python/Clang ainda não informados; estado térmico também não registrado. Os
+17 testes passaram em 5,572 s. Benchmark: 7 amostras após 2 warmups; checksum
+`149999997` para Myrk e C.
+
+| Variante | Mediana | Faixa | Compile time | Pico RSS | Binário |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Myrk | 93,203 ms | 90,652–96,201 ms | 1.118,390 ms | 19.924 KiB | 6.224 B |
+| C direto | 95,039 ms | 87,603–115,373 ms | 751,634 ms | 19.924 KiB | 6.224 B |
+
+A mediana corresponde a 536,5 milhões de iterações/s no Myrk e 526,1 milhões
+no C. As faixas se sobrepõem e há apenas uma sessão; não se infere vantagem.
+O proxy de startup (`print 42`, incluindo lançamento e I/O) teve medianas
+21,412 ms (Myrk) e 15,699 ms (C), também com variação relevante.
+
 ## Baseline 0002 — LIF time-driven sem sinapses
 
 `python3 -m benchmarks.lif` compila um loop C `f64` sobre um buffer contíguo
@@ -58,3 +76,12 @@ mediana de 20,889 ms (faixa 19,602–24,316 ms), equivalente a aproximadamente
 478,7 milhões de atualizações de neurônio por segundo. Pico RSS mediano:
 12.672 KiB; compile time: 62,631 ms. Este número pertence ao baseline C,
 sem comparação com Myrk ou validação Android.
+
+### Termux/AArch64 — execução relatada em 2026-10-04
+
+Mesmo Android 15/AArch64 e Clang acima. O oráculo Python/C passou; checksum
+`435711 19588.354593350865` para 50.000 neurônios × 200 passos. Após 2
+warmups e 7 amostras, a mediana C foi 94,684 ms (faixa 86,056–100,413 ms),
+aproximadamente 105,6 milhões de atualizações de neurônio/s. Pico RSS mediano:
+18.660 KiB; binário: 7.224 B; compile time: 704,266 ms. É um baseline C;
+Myrk ainda não compila esse modelo LIF.

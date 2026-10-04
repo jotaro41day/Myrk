@@ -39,8 +39,9 @@ pedido por `-o`, ou ao lado do fonte sem a extensão. `--help` lista os comandos
 ## Termux / Android
 
 Primeiro alvo de desenvolvimento: CPU AArch64. A instalação usa Python e Clang
-disponíveis no Termux, sem root ou CUDA. **O processo está preparado para
-Termux, mas ainda não foi validado num dispositivo Android real.**
+disponíveis no Termux, sem root ou CUDA. **A versão 0.1.0 passou por instalação,
+17 testes e os dois benchmarks em um Android 15/Termux AArch64 relatado por um
+usuário.** Outros dispositivos e versões ainda precisam de validação.
 
 ```sh
 pkg update
