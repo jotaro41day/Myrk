@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-import math
-import struct
+from fractions import Fraction
 
 from .ir import Instruction, Module, Procedure, Value, PopulationSpec, UniformParameter
 from .lexer import MyrkError
@@ -102,10 +101,11 @@ class Checker:
                 expr = params[param]
                 value = self.expression(expr)
                 self.require(value, dtype, value.pos)
-                number = self.literal_float(expr, dtype)
-                if param == "dt" and number <= 0:
-                    raise MyrkError(expr.pos, "dt must be positive")
-                uniform.append(UniformParameter(param, Value("constant", dtype, expr.pos, repr(number))))
+                text, number = self.literal_float(expr, dtype)
+                half_subnormal = Fraction(1, 2 ** (150 if dtype == "f32" else 1075))
+                if param == "dt" and number <= half_subnormal:
+                    raise MyrkError(expr.pos, "dt must be positive in its precision")
+                uniform.append(UniformParameter(param, Value("constant", dtype, expr.pos, text)))
             symbol = self.add_symbol(name, dtype, False, statement.pos, "population")
             spec = PopulationSpec(symbol.cname, dtype, size, tuple(uniform))
             return Instruction(op, statement.pos, spec)
@@ -181,15 +181,13 @@ class Checker:
             sign, literal = -1, expr.args[0]
         if literal.kind != "float":
             raise MyrkError(expr.pos, "uniform parameter currently requires a floating literal")
-        number = sign * float(literal.value.removesuffix("f32").removesuffix("f64"))
-        try:
-            if dtype == "f32":
-                number = struct.unpack('f', struct.pack('f', number))[0]
-        except OverflowError:
-            number = math.inf
-        if not math.isfinite(number):
+        text = ("-" if sign < 0 else "") + literal.value.removesuffix("f32").removesuffix("f64")
+        number = Fraction(text)
+        # Exact round-to-nearest overflow midpoint; avoid decimal -> f64 -> f32.
+        overflow = 2**128 - 2**103 if dtype == "f32" else 2**1024 - 2**970
+        if abs(number) >= overflow:
             raise MyrkError(expr.pos, "uniform parameter must be finite in its precision")
-        return number
+        return text, number
 
     def expression(self, expr: Expr) -> Value:
         if expr.kind == "load":

@@ -16,6 +16,21 @@ def declaration(dtype='f32', n=9, **overrides):
 
 
 class PopulationTypes(unittest.TestCase):
+    def test_uniform_parameter_rounding_boundaries(self):
+        from decimal import Decimal, localcontext
+        with localcontext() as context:
+            context.prec=200
+            half=Decimal(2)**-150
+            above=format(half+Decimal(2)**-220,'f')
+            at=format(half,'f')
+        # Just above the underflow midpoint must remain a positive f32 dt.
+        check(parse(program(declaration().replace('dt=0.5f32','dt='+above+'f32'))))
+        with self.assertRaisesRegex(MyrkError,'dt must be positive'):
+            check(parse(program(declaration().replace('dt=0.5f32','dt='+at+'f32'))))
+        overflow=str(2**128-2**103)+'.0f32'
+        with self.assertRaisesRegex(MyrkError,'finite'):
+            check(parse(program(declaration().replace('a=0.02f32','a='+overflow))))
+
     def test_semantic_population_survives_in_ir(self):
         spec = check(parse(program(declaration()))).procedures[0].body[0].data
         self.assertEqual(spec.model, 'Izhikevich')
@@ -71,6 +86,18 @@ class PopulationNative(unittest.TestCase):
     def test_initial_state_and_spikes(self):
         result = native(program(declaration('f64')+'print(spikes(p)); print(voltage(p,0)); print(recovery(p,0));'))
         self.assertEqual(result.stdout, '0\n-65\n-13\n')
+
+    def test_population_literal_has_same_rounding_as_scalar(self):
+        literal='1.000000059604644775390625000001f32'
+        body=declaration().replace('c=-65.0f32','c='+literal)
+        result=native(program(body+f'print(voltage(p,0)); print({literal});'))
+        self.assertEqual(result.stdout.splitlines(),['1.00000012','1.00000012'])
+
+    def test_native_exact_threshold_fires(self):
+        for dtype in ['f32','f64']:
+            body = declaration(dtype,c=0.0,b=0.0,dt=1.0,current=-110.0)
+            result = native(program(body+'step(p); print(spikes(p)); print(voltage(p,0)); print(recovery(p,0));'))
+            self.assertEqual(result.stdout,'9\n0\n8\n')
 
     def test_population_bounds(self):
         for query in ['voltage(p,-1)', 'recovery(p,9)']:
