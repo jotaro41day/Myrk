@@ -10,6 +10,9 @@ validado para preservar o progresso se a sessão terminar.
 
 - Pipeline Python stdlib: lexer/parser → IR tipada → C11 → Clang/GCC nativo.
 - Escalares i32/f32/f64/bool, funções, loops; exemplos iniciais preservados.
+- Inferência local exata, expoentes e sufixos de precisão em números, comentários
+  de bloco aninhados. Incremento geral 1: 81 testes passam com GCC.
+  ADR 0005/plano general-language registram a expansão em andamento.
 - Buffers locais `buffer x: f32[n];` / f64, zerados, índice verificado,
   liberados por escopo e retorno. Sem escape/cópia/empréstimo entre funções.
 - `PopulationSpec` / `UniformParameter` na IR; Izhikevich f32/f64 com SoA v/u,

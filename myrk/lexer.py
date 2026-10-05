@@ -41,6 +41,25 @@ def lex(source: str) -> list[Token]:
             continue
         pos = Pos(line, column)
         start = i
+        if source.startswith("/*", i):
+            depth = 1
+            i += 2
+            column += 2
+            while i < n and depth:
+                if source.startswith("/*", i) or source.startswith("*/", i):
+                    depth += 1 if source.startswith("/*", i) else -1
+                    i += 2
+                    column += 2
+                elif source[i] == "\n":
+                    i += 1
+                    line += 1
+                    column = 1
+                else:
+                    i += 1
+                    column += 1
+            if depth:
+                raise MyrkError(pos, "unterminated block comment")
+            continue
         if char.isascii() and (char.isalpha() or char == "_"):
             i += 1
             while i < n and source[i].isascii() and (source[i].isalnum() or source[i] == "_"):
@@ -48,16 +67,27 @@ def lex(source: str) -> list[Token]:
             kind = "ident"
         elif char.isascii() and char.isdigit():
             i += 1
-            while i < n and source[i].isdigit():
+            while i < n and source[i].isascii() and source[i].isdigit():
                 i += 1
             kind = "int"
-            if i + 1 < n and source[i] == "." and source[i + 1].isdigit():
+            if i + 1 < n and source[i] == "." and source[i + 1].isascii() and source[i + 1].isdigit():
                 kind = "float"
                 i += 1
-                while i < n and source[i].isdigit():
+                while i < n and source[i].isascii() and source[i].isdigit():
                     i += 1
-                if source.startswith("f32", i) or source.startswith("f64", i):
-                    i += 3
+            if i < n and source[i] in "eE":
+                kind = "float"
+                i += 1
+                if i < n and source[i] in "+-":
+                    i += 1
+                exponent_start = i
+                while i < n and source[i].isascii() and source[i].isdigit():
+                    i += 1
+                if i == exponent_start:
+                    raise MyrkError(pos, "floating exponent requires decimal digits")
+            if source.startswith("f32", i) or source.startswith("f64", i):
+                kind = "float"
+                i += 3
         else:
             pair = source[i:i + 2]
             if pair in ("->", "..", "==", "!=", "<=", ">="):

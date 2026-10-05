@@ -135,8 +135,8 @@ class Checker:
             return Instruction(op, statement.pos, symbol.cname, (index, value))
         if op == "declare":
             name, dtype, mutable = statement.value
-            dtype = self.type_name(dtype, statement.pos)
             value = self.expression(statement.args[0])
+            dtype = self.type_name(dtype, statement.pos) if dtype is not None else value.dtype
             self.require(value, dtype, statement.pos)
             symbol = self.add_symbol(name, dtype, mutable, statement.pos)
             return Instruction(op, statement.pos, (symbol.cname, dtype), (value,))
@@ -209,7 +209,10 @@ class Checker:
         if expr.kind == "float":
             text = expr.value
             dtype = "f32" if text.endswith("f32") else "f64"
-            return Value("constant", dtype, expr.pos, text.removesuffix("f32").removesuffix("f64"))
+            text = text.removesuffix("f32").removesuffix("f64")
+            if not any(c in text for c in ".eE"):
+                text += ".0"
+            return Value("constant", dtype, expr.pos, text)
         if expr.kind == "bool":
             return Value("constant", "bool", expr.pos, expr.value)
         if expr.kind == "name":

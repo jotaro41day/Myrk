@@ -105,8 +105,7 @@ class Parser:
             return Stmt("buffer", token.pos, (name.text, dtype), (size,))
         if token.text in ("let", "var"):
             name = self.name()
-            self.take(":")
-            dtype = self.name().text
+            dtype = self.name().text if self.match(":") else None
             self.take("=")
             value = self.expression()
             self.take(";")

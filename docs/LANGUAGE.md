@@ -1,9 +1,12 @@
 # Contrato da linguagem 0.1.0
 
 - Entrada obrigatória: `fn main() -> i32`; o valor retornado é o código de saída.
-- Tipos: `i32`, `f32`, `f64`, `bool`. Tipos em parâmetros, variáveis e retornos
-  são obrigatórios. Literais inteiros são `i32`, decimais são `f64`, e o sufixo
-  `f32` cria um literal `f32`. Não há promoção ou conversão implícita.
+- Tipos: `i32`, `f32`, `f64`, `bool`. Parâmetros e retornos têm tipos explícitos.
+  Locais podem usar `let x = 1;` / `var y = 2f32;`: o tipo é exatamente o tipo
+  verificado do inicializador, sem heurística. Anotações locais continuam válidas.
+  Literais inteiros são `i32`, decimais ou expoentes são `f64`; `f32`/`f64`
+  escolhem a precisão (`2f32`, `1e-3f32`, `2.5E2`). Não há promoção implícita.
+- Comentários `//` e `/* ... */` são aceitos; comentários de bloco podem aninhar.
 - `i32` usa aritmética de 32 bits com wrap em `+`, `-`, `*` e negação, usando
   `-fwrapv` em Clang/GCC. Divisão/modulo por zero e `INT32_MIN / -1` encerram
   o processo com código 70. Divisão inteira trunca em direção a zero.
