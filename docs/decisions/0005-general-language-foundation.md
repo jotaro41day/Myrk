@@ -31,6 +31,9 @@ Narrowing f64 to f32 rejects finite overflow; IEEE infinities/NaNs are preserved
 Buffer/population cleanup occurs on every exit from an owning scope, including
 return, break and continue. Logical RHS effects happen only when required.
 Existing source programs and strict floating-point flags remain valid.
+One documented experimental exception: i32/f32/f64/len become reserved
+function names for casts/length. Existing functions using those names need a
+rename. bool/unit remain legal function names because they are not builtins.
 
 Modules, strings, structs/enums, collection ownership, other integer widths,
 standard library, FFI and package tooling require separate tested milestones.

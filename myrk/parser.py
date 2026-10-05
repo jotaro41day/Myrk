@@ -49,8 +49,7 @@ class Parser:
                     if not self.match(","):
                         break
             self.take(")")
-            self.take("->")
-            result = self.name().text
+            result = self.name().text if self.match("->") else "unit"
             body = self.block()
             functions.append(Function(name.text, tuple(params), result, body, name.pos))
         return tuple(functions)
@@ -70,6 +69,8 @@ class Parser:
         if token.kind != "ident":
             raise MyrkError(token.pos, "expected a statement")
         self.index += 1
+        if token.text in ("if", "while", "break", "continue") and self.is_named_statement():
+            return self.named_statement(token)
         if token.text == "if":
             condition = self.expression()
             body = self.block()
@@ -126,9 +127,9 @@ class Parser:
             self.take(";")
             return Stmt("declare", token.pos, (name.text, dtype, token.text == "var"), (value,))
         if token.text == "return":
-            value = self.expression()
+            args = () if self.current.kind == ";" else (self.expression(),)
             self.take(";")
-            return Stmt("return", token.pos, args=(value,))
+            return Stmt("return", token.pos, args=args)
         if token.text == "print":
             self.take("(")
             value = self.expression()
@@ -144,17 +145,50 @@ class Parser:
             end = self.expression()
             body = self.block()
             return Stmt("for", token.pos, index.text, (start, end, body))
+        return self.named_statement(token)
+
+    def is_named_statement(self):
+        if self.current.kind in ("=", "+=", "-=", "*=", "/=", "%=", "["):
+            return True
+        if self.current.kind == "(":
+            depth = 0
+            for index in range(self.index, len(self.tokens)):
+                kind = self.tokens[index].kind
+                depth += (kind == "(") - (kind == ")")
+                if depth == 0:
+                    return self.tokens[index + 1].kind == ";"
+        return False
+
+    def named_statement(self, token):
+        if self.current.kind == "(":
+            self.index -= 1
+            value = self.expression()
+            self.take(";")
+            if value.kind != "call":
+                raise MyrkError(value.pos, "only a function call can be used as an expression statement")
+            return Stmt("discard", token.pos, args=(value,))
         if self.match("["):
             index = self.expression()
             self.take("]")
-            self.take("=")
+            operator = self.assignment_operator()
             value = self.expression()
             self.take(";")
+            if operator != "=":
+                return Stmt("compound_store", token.pos, (token.text, operator[0]), (index, value))
             return Stmt("store", token.pos, token.text, (index, value))
-        self.take("=")
+        operator = self.assignment_operator()
         value = self.expression()
         self.take(";")
+        if operator != "=":
+            return Stmt("compound_assign", token.pos, (token.text, operator[0]), (value,))
         return Stmt("assign", token.pos, token.text, (value,))
+
+    def assignment_operator(self):
+        if self.current.kind in ("+=", "-=", "*=", "/=", "%="):
+            token = self.current
+            self.index += 1
+            return token.kind
+        return self.take("=").kind
 
     def expression(self, minimum: int = 0) -> Expr:
         token = self.current

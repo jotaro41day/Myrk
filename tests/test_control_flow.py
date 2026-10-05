@@ -15,6 +15,13 @@ IZH = '''population p: Izhikevich<f32>(size=17,
 
 
 class ControlTypes(unittest.TestCase):
+    def test_new_keywords_preserve_existing_identifiers(self):
+        for name in ('if', 'while', 'break', 'continue'):
+            with self.subTest(name=name):
+                check(parse(program(f'var {name}: i32 = 0; {name} = 1; print({name});')))
+                check(parse(program(f'buffer {name}: f32[1]; {name}[0] = 1f32;')))
+                check(parse(f'fn {name}() -> i32 {{ return 1; }} ' + program(f'{name}();')))
+
     def test_conditions_and_logic_require_bool(self):
         for body in ('if 1 { print(0); }', 'while 1f32 { break; }',
                      'print(1 && 2);', 'print(true || 1);'):

@@ -9,8 +9,11 @@ gerado não precisa de Python. Myrk é um projeto independente, inspirado em
 questões de desempenho levantadas pelo [AresY](https://github.com/Jotaroofdioinbrando/AresY).
 
 **Estado atual:** funções, `i32`, `f32`, `f64`, `bool`, variáveis imutáveis (`let`)
-e mutáveis (`var`), laços `for` de faixa exclusiva, aritmética, comparações,
-`print` e `return`. Há buffers contíguos locais f32/f64 com índices verificados.
+e mutáveis (`var`), inferência local exata, `if`/`else`, `while`, `for`,
+`break`/`continue`, operadores lógicos com curto-circuito, aritmética,
+atribuições compostas, conversões numéricas explícitas, `print` e `return`.
+Funções podem retornar `unit`; chamadas também podem ser instruções.
+Há buffers contíguos locais i32/f32/f64/bool com índices verificados e `len`.
 Há populações nativas IF, LIF, Izhikevich, QIF, AdEx e HH em f32/f64,
 com SoA, parâmetros uniformes e solvers explícitos.
 Loops de populações independentes podem usar um pool CPU persistente via
@@ -47,7 +50,7 @@ pedido por `-o`, ou ao lado do fonte sem a extensão. `--help` lista os comandos
 Primeiro alvo de desenvolvimento: CPU AArch64. A instalação usa Python e Clang
 disponíveis no Termux, sem root ou CUDA. **A versão 0.1.0 passou por instalação,
 17 testes e os dois benchmarks em um Android 15/Termux AArch64 relatado por um
-usuário.** Buffers e Izhikevich adicionados depois ainda aguardam execução
+usuário.** Buffers, modelos e sintaxe acrescentados depois ainda aguardam execução
 no Android. Outros dispositivos e versões ainda precisam de validação.
 
 ```sh
@@ -73,11 +76,27 @@ os executáveis produzidos usam somente a biblioteca C padrão.
 
 ## Sintaxe atual
 
-Veja [examples/sum.myrk](examples/sum.myrk) e
-[examples/numeric.myrk](examples/numeric.myrk). `1.5f32` é `f32`; `1.5` é
-`f64`. Não existem conversões numéricas implícitas. `for i in 0..n` percorre
-`0` até `n - 1`. Todas as funções devem terminar com `return`. Detalhes e
+Veja [examples/language_basics.myrk](examples/language_basics.myrk),
+[examples/fibonacci.myrk](examples/fibonacci.myrk) e
+[examples/control_flow.myrk](examples/control_flow.myrk). `1.5f32` é `f32`;
+`1e-3` é `f64`. `let x = 1;` infere i32; `var x = 1f32;` infere f32.
+Não existem conversões numéricas implícitas. `for i in 0..n` percorre
+`0` até `n - 1`. Funções escalares retornam em todos os caminhos. Detalhes e
 limitações estão em [docs/LANGUAGE.md](docs/LANGUAGE.md).
+
+```myrk
+fn mostrar(x: f32) { print(x); }
+
+fn main() -> i32 {
+    var soma = 0f32;
+    for i in 0..8 { soma += f32(i); }
+    if soma > 0f32 { mostrar(soma); }
+    return 0;
+}
+```
+
+Strings, módulos/imports, structs/enums e coleções dinâmicas seguem pendentes;
+as etapas estão no [roadmap geral](docs/ROADMAP.md#linguagem-geral).
 
 ## Testes e benchmarks
 
@@ -92,8 +111,8 @@ python3 -m benchmarks.neuron.models --sizes 1000 --summary
 O benchmark inicial compara o mesmo laço `i32` com um baseline C compilado
 com as mesmas flags. Ele confere o checksum antes de medir. Isso valida o
 instrumento, não mede ainda uma vantagem neural. Há também um baseline LIF
-time-driven em C, validado contra um oráculo Python em escala pequena; Myrk
-ainda não compila esse modelo. Metodologia e resultados
+time-driven em C, validado contra um oráculo Python em escala pequena e agora
+também comparado ao LIF nativo nos testes. Metodologia e resultados
 estão em [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 
@@ -134,8 +153,8 @@ O padrão é `MYRK_TILE=0`. Só use um tamanho positivo após medir; blocos pequ
 podem piorar desempenho. `MYRK_THREADS=2 MYRK_TILE=16384 myrk run examples/izhikevich.myrk`
 ativa essa configuração para loops elegíveis sem observação intermediária.
 
-Populações usam dois buffers contíguos, parâmetros uniformes e Euler simultâneo
-com dt explícito. `step`, `spikes`, `voltage` e `recovery` são operações da
+Populações preservam estados SoA contíguos, parâmetros uniformes e solver
+explícito; Izhikevich usa dois buffers e Euler simultâneo. `step`, `spikes`, `voltage` e `recovery` são operações da
 linguagem. **São neurônios independentes: ainda não há conectividade ou sinapses.**
 O laboratório confere todos os estados/spikes com C antes de reportar velocidade,
 além do oráculo Python pequeno. Dtypes são comparados separadamente, sem

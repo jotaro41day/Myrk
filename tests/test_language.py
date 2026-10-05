@@ -9,6 +9,22 @@ from test_buffers import native, program
 
 
 class LanguageSyntaxTests(unittest.TestCase):
+    def test_extreme_uniform_exponents_are_bounded(self):
+        template = ('population p: Izhikevich<f32>(size=1, a=0.02f32, b=0.2f32, '
+                    'c=-65f32, d=8f32, dt=DT, current=10f32);')
+        for value, error in [('1e1000000000f32', 'finite'),
+                             ('1e-1000000000f32', 'positive'),
+                             ('0e1000000000f32', 'positive')]:
+            with self.subTest(value=value), self.assertRaisesRegex(MyrkError, error):
+                check(parse(program(template.replace('DT', value))))
+
+    def test_extreme_uniform_underflow_preserves_signed_zero(self):
+        body = ('population p: Izhikevich<f64>(size=1, a=0.02, b=0.2, '
+                'c=-1e-1000000000, d=8.0, dt=0.5, current=10.0);')
+        module = check(parse(program(body)))
+        params = {p.name: p.value.data for p in module.procedures[0].body[0].data.parameters}
+        self.assertEqual(params['c'], '-0.0')
+
     def test_nested_block_comment_locations(self):
         tokens = lex('/* outer\n /* inner */ done */\nprint(42);')
         self.assertEqual((tokens[0].text, tokens[0].pos.line, tokens[0].pos.column),

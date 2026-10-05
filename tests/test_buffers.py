@@ -32,7 +32,7 @@ class BufferTypes(unittest.TestCase):
 
     def test_bad_buffer_uses(self):
         for body, error in [
-            ('buffer x: bool[4];', 'buffer element'),
+            ('buffer x: unit[4];', 'buffer element'),
             ('buffer x: f32[1.0];', 'expected i32'),
             ('buffer x: f32[4]; x[0] = 1.0;', 'expected f32'),
             ('buffer x: f32[4]; print(x[0.0]);', 'expected i32'),

@@ -27,6 +27,9 @@ jobs:
           python3 -m myrk run examples/sum.myrk
           python3 -m myrk run examples/numeric.myrk
           python3 -m myrk run examples/vector.myrk
+          python3 -m myrk run examples/fibonacci.myrk
+          python3 -m myrk run examples/control_flow.myrk
+          python3 -m myrk run examples/language_basics.myrk
           python3 -m myrk run examples/izhikevich.myrk
           python3 -m myrk run examples/if.myrk
           python3 -m myrk run examples/lif.myrk

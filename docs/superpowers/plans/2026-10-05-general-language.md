@@ -50,14 +50,33 @@ Files: parser.py, semantics.py, codegen_c.py, optimize.py, test_language.py.
 
 Files: parser.py, semantics.py, codegen_c.py, tests, examples, docs, CI.
 
-- [ ] Add failing tests for unit functions, ignored call results, compound scalar
+- [x] Add failing tests for unit functions, ignored call results, compound scalar
   assignments, numeric casts with boundary/nonfinite errors and evaluation order.
-- [ ] Implement exact-type operations, checked casts and unit-returning calls.
-- [ ] Add executable ordinary-program examples and CI coverage.
-- [ ] Verify both compilers, examples, SNN benchmark correctness and publish.
+- [x] Implement exact-type operations, checked casts and unit-returning calls.
+- [x] Add executable ordinary-program examples and CI coverage.
+- [x] Verify both compilers, examples, SNN benchmark correctness and publish.
 
 ### Task 4: Development continuity
 
 - [ ] Update language specification, README, changelog, roadmap and saved state.
 - [ ] Record remaining general-language milestones as GitHub issues.
 - [ ] Review final diff, verify remote SHA and CI, report only proven features.
+
+## Evidence and rulings
+
+- Task 1: 7 new tests first failed, then 81 full-suite tests passed; published d9bb29e.
+- Task 2: 11 new tests first failed, then 92 full-suite tests passed. Six native
+  tests passed ASan/UBSan/LSan; examples fibonacci=55, control_flow=16; d97adb3.
+- Task 3: 14 new tests first failed; final 110 tests pass with GCC14.2/Clang19.
+  Nine native cast/function tests passed address/UB checks; success paths also
+  pass leak checking. Fatal bounds termination has no resource unwinding, so
+  only that exit(70) test disables LSan (address/UB checks remain active).
+- Ruling: extend scalar buffers to i32/bool and expose len now — existing
+  contiguous ownership/runtime is sufficient; no dynamic collection semantics.
+- Ruling: preserve old control-keyword identifiers where syntax is unambiguous
+  — review found a compatibility regression; new regression tests prove it.
+- Ruling: reject extreme decimal overflow before Fraction construction and
+  normalize definite underflow — avoids compiler exhaustion from tiny input.
+- Ruling: reserve numeric cast names and len only, document the 0.x break;
+  bool/unit remain legal function names because neither is callable builtin.
+- Focused independent review found the three cases above; fixes were verified.

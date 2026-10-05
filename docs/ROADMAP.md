@@ -29,6 +29,26 @@ layout, projeção, conectividade, delays e monitores. Não se criam camadas vaz
 Compiler metadata deve eliminar arrays de parâmetros repetidos, alocações por
 passo e recording não solicitado; novas eliminações de trabalho exigem prova.
 
+## Linguagem geral
+
+A linguagem também deve permitir programas completos fora de SNN. Esta frente
+evolui sobre o compilador existente, preservando a prioridade de kernels SNN.
+Não representa uma reescrita ou a promessa de que todos os recursos já existem.
+
+| Etapa | Entrega | Estado / gate |
+| --- | --- | --- |
+| G0 | Inferência local, comentários de bloco, expoentes, if/else/while, break/continue, lógica curta, funções unit, casts, atribuições compostas, buffers escalares e len | Implementado; testes nativos/ownership/diagnósticos; Android pendente |
+| G1 | Módulos/imports com resolução determinística e strings UTF-8 imutáveis; impressão textual | Futuro; especificar ciclos, caminhos e ownership antes de implementar |
+| G2 | Structs/enums, construtores, acesso a campos, match, aliases de tipo | Futuro; layout/valor/ABI explícitos, exhaustividade e diagnósticos |
+| G3 | i8/i16/i64/u8/u16/u32/u64 e operadores bitwise | Futuro; wrap, shifts, casts, limites e ABI devem ter contrato testado |
+| G4 | Views/borrowing de buffers entre funções, arrays estáticos, slices, coleções dinâmicas | Futuro; lifetime/aliasing/limites sem GC no hot path |
+| G5 | Biblioteca padrão: matemática, RNG reproduzível, arquivos, argumentos CLI, erros/resultados e tempo | Futuro; efeitos/custos explícitos e operações portáveis Termux |
+| G6 | FFI C, módulos compilados, formatter, myrk test/bench, tooling e pacotes | Futuro; builds reproduzíveis, símbolos/ABI e testes de instalação |
+
+Toda etapa precisa de programas executáveis, testes, documentação e benchmark
+quando alterar runtime ou layout. Recursos genéricos não apagam PopulationSpec,
+UniformParameter, solver ou precisão antes do lowering. [ADR 0005](decisions/0005-general-language-foundation.md).
+
 Termux precisa de execução real por etapa. Cross compilation/CI x86 não garantem
 Android. As medições do usuário em modelo 25078PC3EG, Python 3.14.6 e Clang
 21.1.8 continuam válidas para a versão testada; não abrangem automaticamente

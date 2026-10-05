@@ -10,13 +10,17 @@ validado para preservar o progresso se a sessão terminar.
 
 - Pipeline Python stdlib: lexer/parser → IR tipada → C11 → Clang/GCC nativo.
 - Escalares i32/f32/f64/bool, funções, loops; exemplos iniciais preservados.
-- Inferência local exata, expoentes e sufixos de precisão em números, comentários
-  de bloco aninhados. Incremento geral 2: 92 testes passam com GCC; seis testes
-  nativos de controle de fluxo também passam em ASan/UBSan.
-  if/else/while, break/continue, curto-circuito e retorno por caminho prontos.
-  ADR 0005/plano general-language registram a expansão em andamento.
-- Buffers locais `buffer x: f32[n];` / f64, zerados, índice verificado,
-  liberados por escopo e retorno. Sem escape/cópia/empréstimo entre funções.
+- Inferência local exata, expoentes/sufixos f32/f64 e comentários de bloco
+  aninhados. if/else/while, break/continue, curto-circuito e retornos por caminho.
+- Funções unit, chamadas como instruções, casts numéricos verificados,
+  atribuições compostas escalares/buffer e len. Buffers locais i32/f32/f64/bool
+  zerados, com índices e liberação por escopo/return/break/continue; sem escape,
+  cópia ou empréstimo entre funções. Novos exemplos language_basics/fibonacci/control_flow.
+- Fundação geral G0 no ADR 0005 e plano general-language; próxima frente G1–G6
+  em ROADMAP. Só nomes de função i32/f32/f64/len reservados adicionalmente;
+  palavras novas de controle preservam atribuições/chamadas antigas inequívocas.
+- Parâmetros uniformes classificam expoentes extremos antes de construir
+  Fraction; limites de precisão continuam exatos e zeros com sinal preservados.
 - `PopulationSpec` / `UniformParameter` na IR; Izhikevich f32/f64 com SoA v/u,
   parâmetros uniformes, solver Euler simultâneo, threshold após passo.
 - `step`, `spikes` (último passo), `voltage` e `recovery`; sem sinapses ou
@@ -25,8 +29,14 @@ validado para preservar o progresso se a sessão terminar.
   Laboratório compara todos os estados e spikes antes de reportar desempenho.
 - Sweep 1K/10K/100K/1M/2M/5M/10M f32/f64 em Xeon, GCC O2/O3 e Clang O2.
   Dados preservados em docs/measurements, resumo em PERFORMANCE/MILLION_NEURON_PLAN.
-- 74 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
-  passaram com ASan/UBSan. CI Linux passa; matriz GCC/Clang verifica ambos.
+- 110 testes passam localmente com GCC 14.2 (30,486 s) e Clang 19.1.7
+  (42,017 s); seis testes nativos de controle e nove de casts/funções têm
+  checagens ASan/UBSan. CI Linux verifica matriz GCC/Clang e novos exemplos.
+  LSan está ativo nos caminhos de sucesso. Um teste de erro fatal de índice
+  conserva 4 bytes até exit(70), como o runtime anterior; LSan alterava o exit
+  para 1. Nesse caso somente leak detection foi desativada; checks ASan/UBSan
+  permanecem ativos. O OS recupera alocações ao terminar. Não afirmar que o
+  runtime faz unwinding de recursos em falhas fatais.
 - Revisão corrigiu duplo arredondamento de parâmetros f32: preservar decimal
   original no C, limites exatos com Fraction. Não reintroduzir conversão via f64.
 

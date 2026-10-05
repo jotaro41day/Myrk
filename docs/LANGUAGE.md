@@ -1,7 +1,8 @@
 # Contrato da linguagem 0.1.0
 
 - Entrada obrigatória: `fn main() -> i32`; o valor retornado é o código de saída.
-- Tipos: `i32`, `f32`, `f64`, `bool`. Parâmetros e retornos têm tipos explícitos.
+- Tipos escalares: `i32`, `f32`, `f64`, `bool`. Parâmetros têm tipos explícitos.
+  Retornos escalares têm tipos explícitos; resultado omitido significa `unit`.
   Locais podem usar `let x = 1;` / `var y = 2f32;`: o tipo é exatamente o tipo
   verificado do inicializador, sem heurística. Anotações locais continuam válidas.
   Literais inteiros são `i32`, decimais ou expoentes são `f64`; `f32`/`f64`
@@ -28,6 +29,13 @@
   retorno em ambos os ramos satisfaz essa regra; um laço sozinho não satisfaz.
 - Chamadas usam assinaturas declaradas e aceitam funções definidas depois da
   chamada. `print` aceita um escalar e adiciona uma quebra de linha.
+- Chamadas podem ser instruções (`processar(10);`), descartando um resultado.
+  `fn processar(n: i32) { ... }` equivale a `-> unit`; pode terminar sem return
+  ou usar `return;`. Unit não é um tipo de variável, buffer ou parâmetro.
+- `+=`, `-=`, `*=`, `/=` e `%=` funcionam em variáveis mutáveis e elementos
+  de buffer numéricos, com as mesmas regras de tipo, wrap e divisão da aritmética.
+  O destino é avaliado uma vez; em buffers, índice/verificação/leitura precedem
+  a avaliação do lado direito. `i32` é obrigatório para `%=`.
 - Subexpressões e argumentos de chamadas são avaliados da esquerda para a
   direita. O backend materializa valores intermediários para preservar a ordem.
 - O compilador informa arquivo, linha e coluna nos erros de sintaxe e tipos.
@@ -38,7 +46,7 @@ executável nativo por um compilador C externo.
 
 ## Buffers locais
 
-`buffer x: f32[n];` ou `buffer x: f64[n];` aloca n elementos contíguos,
+`buffer x: T[n];`, com T i32/f32/f64/bool, aloca n elementos contíguos,
 zerados. n é i32 e avaliado uma vez. `x[i]` lê e `x[i] = valor;` escreve.
 Índice i32 fora de `[0,n)`, tamanho negativo ou falha de alocação encerram
 com código 70. Um buffer vazio é válido. O índice é avaliado/verificado antes
@@ -47,6 +55,26 @@ retornos antecipados, break e continue. Saídas de laço liberam apenas recursos
 dos escopos abandonados; buffers externos continuam válidos. Buffers não podem
 ser copiados, passados ou retornados ainda.
 Veja `examples/vector.myrk` (resultado 2048).
+
+`len(x)` retorna o tamanho i32 de um buffer ou população local, incluindo zero.
+Ainda não existem buffers dinâmicos redimensionáveis ou literais de array.
+
+## Conversões numéricas
+
+`i32(expr)`, `f32(expr)` e `f64(expr)` aceitam um único escalar numérico.
+Não convertem bool. Nenhuma promoção numérica é implícita. `i32` de float
+trunca em direção a zero; valor não finito ou resultado fora de i32 encerra
+com erro 70 antes da conversão C. `i32(2147483647.9)` é 2147483647.
+
+`f32` de f64 arredonda na precisão do target e preserva zero com sinal,
+infinito e NaN. Valores finitos com magnitude acima de FLT_MAX produzem erro
+70; underflow é permitido. Conversões i32→float e f32→f64 são explícitas.
+`f32(16777217)` arredonda para 16777216, enquanto `f64(16777217)` é exato.
+Confira [language_basics.myrk](../examples/language_basics.myrk).
+
+Nomes de função i32/f32/f64/len são reservados junto aos builtins
+neurais e print/step. As novas palavras de controle de fluxo continuam aceitas
+em declarações antigas quando a sintaxe de atribuição/chamada é inequívoca.
 
 ## Populações Izhikevich
 

@@ -9,6 +9,13 @@
 
 ## Unreleased
 
+- Funções unit (resultado omitido ou -> unit), return sem valor, chamadas como
+  instruções, atribuições compostas escalares e em buffers, casts i32/f32/f64
+  verificados, len e buffers i32/bool. Novos exemplos de programação geral.
+- Breaking (experimental): i32/f32/f64/len passam a ser nomes de funções
+  reservados. Referências a variáveis com essas grafias continuam válidas.
+- Expoentes extremos em parâmetros uniformes são classificados antes de criar
+  frações enormes; underflow mantém zero com sinal e validação de domínio.
 - Condições if/else if/else, while, break/continue com liberação por escopo,
   operadores &&/|| com curto-circuito e análise de retorno em todos os caminhos.
 - Breaking (experimental): comparações ordenadas passam a ter precedência maior

@@ -1,0 +1,31 @@
+/* Ordinary numerical programming; no population is required.
+   Locals infer exact types, while public function signatures stay explicit. */
+fn mean_square(n: i32) -> f32 {
+    buffer values: f32[n];
+    var sum = 0f32;
+    for i in 0..len(values) {
+        let x = f32(i);
+        values[i] = x * x;
+        sum += values[i];
+    }
+    return sum / f32(n);
+}
+
+// Omitting the result annotation means unit (no returned value).
+fn report(value: f32) {
+    print(value);
+}
+
+fn main() -> i32 {
+    report(mean_square(8)); // 17.5
+    buffer flags: bool[8];
+    var count = 0;
+    var i = 0;
+    while i < len(flags) {
+        flags[i] = i % 2 == 0;
+        if flags[i] { count += 1; }
+        i += 1;
+    }
+    print(count); // 4
+    return 0;
+}

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 
 from .ir import Instruction, Module, Procedure, Value, PopulationSpec, UniformParameter
@@ -34,7 +35,9 @@ class Checker:
         self.result = ""
         self.loop_depth = 0
 
-    def type_name(self, name: str, pos: Pos) -> str:
+    def type_name(self, name: str, pos: Pos, allow_unit=False) -> str:
+        if name == "unit" and allow_unit:
+            return name
         if name not in TYPES:
             raise MyrkError(pos, f"unknown type {name!r}; expected i32, f32, f64 or bool")
         return name
@@ -55,10 +58,10 @@ class Checker:
 
     def check(self) -> Module:
         for function in self.functions:
-            if function.name in self.signatures or function.name in {"print", "step", "spikes", *STATE_QUERIES}:
+            if function.name in self.signatures or function.name in {"print", "step", "spikes", "len", *NUMERIC, *STATE_QUERIES}:
                 raise MyrkError(function.pos, f"duplicate or reserved function {function.name!r}")
             params = tuple(self.type_name(t, p) for _, t, p in function.params)
-            result = self.type_name(function.result, function.pos)
+            result = self.type_name(function.result, function.pos, allow_unit=True)
             self.signatures[function.name] = (params, result)
         if "main" not in self.signatures or self.signatures["main"] != ((), "i32"):
             raise MyrkError(Pos(1, 1), "program needs fn main() -> i32")
@@ -71,7 +74,7 @@ class Checker:
                 symbol = self.add_symbol(name, dtype, False, pos)
                 params.append((symbol.cname, dtype))
             body = self.block(function.body, nested=False)
-            if not self.returns(body):
+            if function.result != "unit" and not self.returns(body):
                 raise MyrkError(function.pos, f"function {function.name!r} must return on all paths")
             procedures.append(Procedure(function.name, tuple(params), function.result, body))
         return Module(tuple(procedures))
@@ -150,17 +153,23 @@ class Checker:
             return Instruction(op, statement.pos, (symbol.cname, symbol.dtype, symbol.model))
         if op == "buffer":
             name, dtype = statement.value
-            if dtype not in ("f32", "f64"):
-                raise MyrkError(statement.pos, "buffer element must be f32 or f64")
+            if dtype not in TYPES:
+                raise MyrkError(statement.pos, "buffer element must be i32, f32, f64 or bool")
             size = self.expression(statement.args[0])
             self.require(size, "i32", size.pos)
             symbol = self.add_symbol(name, dtype, True, statement.pos, "buffer")
             return Instruction(op, statement.pos, (symbol.cname, dtype), (size,))
-        if op == "store":
-            symbol, index = self.buffer_index(statement.value, statement.args[0], statement.pos)
+        if op in ("store", "compound_store"):
+            name = statement.value if op == "store" else statement.value[0]
+            symbol, index = self.buffer_index(name, statement.args[0], statement.pos)
             value = self.expression(statement.args[1])
             self.require(value, symbol.dtype, value.pos)
-            return Instruction(op, statement.pos, symbol.cname, (index, value))
+            data = symbol.cname
+            if op == "compound_store":
+                operator = statement.value[1]
+                self.binary_value(operator, Value("variable", symbol.dtype, statement.pos, symbol.cname), value, statement.pos)
+                data = (symbol.cname, operator)
+            return Instruction(op, statement.pos, data, (index, value))
         if op == "declare":
             name, dtype, mutable = statement.value
             value = self.expression(statement.args[0])
@@ -168,18 +177,31 @@ class Checker:
             self.require(value, dtype, statement.pos)
             symbol = self.add_symbol(name, dtype, mutable, statement.pos)
             return Instruction(op, statement.pos, (symbol.cname, dtype), (value,))
-        if op == "assign":
-            symbol = self.lookup(statement.value, statement.pos)
+        if op in ("assign", "compound_assign"):
+            name = statement.value if op == "assign" else statement.value[0]
+            symbol = self.lookup(name, statement.pos)
             if symbol.kind != "scalar":
                 raise MyrkError(statement.pos, f"cannot assign a {symbol.kind}; assign an element")
             if not symbol.mutable:
-                raise MyrkError(statement.pos, f"cannot assign to immutable variable {statement.value!r}; use 'var'")
+                raise MyrkError(statement.pos, f"cannot assign to immutable variable {name!r}; use 'var'")
             value = self.expression(statement.args[0])
             self.require(value, symbol.dtype, statement.pos)
-            return Instruction(op, statement.pos, symbol.cname, (value,))
+            if op == "compound_assign":
+                value = self.binary_value(statement.value[1],
+                    Value("variable", symbol.dtype, statement.pos, symbol.cname), value, statement.pos)
+            return Instruction("assign", statement.pos, symbol.cname, (value,))
         if op == "return":
+            if self.result == "unit":
+                if statement.args:
+                    raise MyrkError(statement.pos, "unit function uses 'return;' without a value")
+                return Instruction(op, statement.pos)
+            if not statement.args:
+                raise MyrkError(statement.pos, f"return requires a {self.result} value")
             value = self.expression(statement.args[0])
             self.require(value, self.result, statement.pos)
+            return Instruction(op, statement.pos, args=(value,))
+        if op == "discard":
+            value = self.expression(statement.args[0], allow_unit=True)
             return Instruction(op, statement.pos, args=(value,))
         if op == "print":
             value = self.expression(statement.args[0])
@@ -220,14 +242,24 @@ class Checker:
         if literal.kind != "float":
             raise MyrkError(expr.pos, "uniform parameter currently requires a floating literal")
         text = ("-" if sign < 0 else "") + float_literal_text(literal.value)
-        number = Fraction(text)
         # Exact round-to-nearest overflow midpoint; avoid decimal -> f64 -> f32.
         overflow = 2**128 - 2**103 if dtype == "f32" else 2**1024 - 2**970
-        if abs(number) >= overflow:
+        try:
+            magnitude = Decimal(text).copy_abs()
+        except InvalidOperation:
+            raise MyrkError(expr.pos, "uniform parameter has an unsupported exponent") from None
+        if magnitude >= Decimal(overflow):
             raise MyrkError(expr.pos, "uniform parameter must be finite in its precision")
-        return text, number
+        if not magnitude:
+            return ("-0.0" if sign < 0 else "0.0"), Fraction(0)
+        floor = -60 if dtype == "f32" else -400
+        if magnitude.adjusted() < floor:
+            # Definitely rounds to zero. A bounded signed witness retains domain
+            # checks (positive/nonnegative) without constructing 10**huge_exp.
+            return ("-0.0" if sign < 0 else "0.0"), Fraction(sign, 10 ** -floor)
+        return text, Fraction(text)
 
-    def expression(self, expr: Expr) -> Value:
+    def expression(self, expr: Expr, allow_unit=False) -> Value:
         if expr.kind == "load":
             symbol, index = self.buffer_index(expr.value, expr.args[0], expr.pos)
             return Value("load", symbol.dtype, expr.pos, symbol.cname, (index,))
@@ -248,6 +280,20 @@ class Checker:
                 raise MyrkError(expr.pos, f"expected scalar, found {symbol.kind}")
             return Value("variable", symbol.dtype, expr.pos, symbol.cname)
         if expr.kind == "call":
+            if expr.value in NUMERIC:
+                if len(expr.args) != 1:
+                    raise MyrkError(expr.pos, "numeric cast expects one argument")
+                arg = self.expression(expr.args[0])
+                if arg.dtype not in NUMERIC:
+                    raise MyrkError(expr.pos, "cast requires a numeric value")
+                return Value("cast", expr.value, expr.pos, args=(arg,))
+            if expr.value == "len":
+                if len(expr.args) != 1 or expr.args[0].kind != "name":
+                    raise MyrkError(expr.pos, "len expects one buffer or population name")
+                symbol = self.lookup(expr.args[0].value, expr.pos)
+                if symbol.kind not in ("buffer", "population"):
+                    raise MyrkError(expr.pos, "len expects a buffer or population")
+                return Value("len", "i32", expr.pos, (symbol.cname, symbol.kind))
             if expr.value in {"spikes", *STATE_QUERIES}:
                 count = 1 if expr.value == "spikes" else 2
                 if len(expr.args) != count or expr.args[0].kind != "name":
@@ -271,6 +317,8 @@ class Checker:
             args = tuple(self.expression(item) for item in expr.args)
             for arg, dtype in zip(args, params):
                 self.require(arg, dtype, arg.pos)
+            if result == "unit" and not allow_unit:
+                raise MyrkError(expr.pos, "unit call cannot be used as a scalar value")
             return Value("call", result, expr.pos, expr.value, args)
         if expr.kind == "unary":
             if expr.value == "-" and expr.args[0].kind == "int" and expr.args[0].value == "2147483648":
@@ -284,21 +332,21 @@ class Checker:
         if expr.kind == "binary":
             left = self.expression(expr.args[0])
             right = self.expression(expr.args[1])
-            if left.dtype != right.dtype:
-                raise MyrkError(expr.pos, f"type mismatch: {left.dtype} and {right.dtype}")
-            operator = expr.value
-            if operator in ("&&", "||"):
-                self.require(left, "bool", expr.pos)
-                return Value("logical", "bool", expr.pos, operator, (left, right))
-            if operator in ("+", "-", "*", "/") and left.dtype not in NUMERIC:
-                raise MyrkError(expr.pos, f"'{operator}' requires numbers")
-            if operator == "%" and left.dtype != "i32":
-                raise MyrkError(expr.pos, "'%' requires i32")
-            if operator in ("<", "<=", ">", ">=") and left.dtype not in NUMERIC:
-                raise MyrkError(expr.pos, f"'{operator}' requires numbers")
-            dtype = "bool" if operator in ("==", "!=", "<", "<=", ">", ">=") else left.dtype
-            return Value("binary", dtype, expr.pos, operator, (left, right))
+            return self.binary_value(expr.value, left, right, expr.pos)
         raise AssertionError(expr.kind)
+
+    def binary_value(self, operator, left, right, pos):
+        if left.dtype != right.dtype:
+            raise MyrkError(pos, f"type mismatch: {left.dtype} and {right.dtype}")
+        if operator in ("&&", "||"):
+            self.require(left, "bool", pos)
+            return Value("logical", "bool", pos, operator, (left, right))
+        if operator in ("+", "-", "*", "/", "<", "<=", ">", ">=") and left.dtype not in NUMERIC:
+            raise MyrkError(pos, f"'{operator}' requires numbers")
+        if operator == "%" and left.dtype != "i32":
+            raise MyrkError(pos, "'%' requires i32")
+        dtype = "bool" if operator in ("==", "!=", "<", "<=", ">", ">=") else left.dtype
+        return Value("binary", dtype, pos, operator, (left, right))
 
 
 def check(functions: tuple[Function, ...]) -> Module:

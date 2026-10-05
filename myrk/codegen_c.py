@@ -6,7 +6,7 @@ from .models import STATE_QUERIES, population_type, prefix
 from .model_kernels import kernel as model_kernel
 
 
-C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool"}
+C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool", "unit": "void"}
 
 
 class CGenerator:
@@ -33,6 +33,9 @@ class CGenerator:
         return f"{'    ' * indent}{C_TYPES[dtype]} {name} = {expression};", name
 
     def value(self, item: Value, indent: int) -> tuple[list[str], str]:
+        if item.op == "len":
+            name, kind = item.data
+            return [], f"{name}.size" if kind == "population" else f"{name}_size"
         if item.op == "spikes":
             return [], f"{item.data}.spikes"
         if item.op in STATE_QUERIES:
@@ -54,6 +57,16 @@ class CGenerator:
             return [], str(item.data)
         if item.op == "variable":
             return [], item.data
+        if item.op == "cast":
+            lines, arg = self.value(item.args[0], indent)
+            if item.dtype == "i32" and item.args[0].dtype != "i32":
+                expression = f"myrk_cast_i32({arg})"
+            elif item.dtype == "f32" and item.args[0].dtype == "f64":
+                expression = f"myrk_cast_f32({arg})"
+            else:
+                expression = f"({C_TYPES[item.dtype]})({arg})"
+            assignment, name = self.temporary(item.dtype, expression, indent)
+            return lines + [assignment], name
         if item.op == "call":
             lines = []
             args = []
@@ -63,8 +76,10 @@ class CGenerator:
                 assignment, name = self.temporary(arg.dtype, rendered, indent)
                 lines.append(assignment)
                 args.append(name)
-            assignment, name = self.temporary(item.dtype,
-                                              f"myrk_f_{item.data}({', '.join(args)})", indent)
+            expression = f"myrk_f_{item.data}({', '.join(args)})"
+            if item.dtype == "unit":
+                return lines + [f"{'    ' * indent}{expression};"], ""
+            assignment, name = self.temporary(item.dtype, expression, indent)
             lines.append(assignment)
             return lines, name
         if item.op == "unary":
@@ -88,14 +103,16 @@ class CGenerator:
             right_lines, right = self.value(item.args[1], indent)
             right_assignment, right = self.temporary(item.args[1].dtype, right, indent)
             lines = left_lines + [left_assignment] + right_lines + [right_assignment]
-            if item.data in ("/", "%") and item.args[0].dtype == "i32":
-                helper = "div" if item.data == "/" else "mod"
-                expression = f"myrk_{helper}_i32({left}, {right})"
-            else:
-                expression = f"({left} {item.data} {right})"
+            expression = self.binary_expression(item.data, item.args[0].dtype, left, right)
             assignment, name = self.temporary(item.dtype, expression, indent)
             return lines + [assignment], name
         raise AssertionError(item.op)
+
+    def binary_expression(self, operator, dtype, left, right):
+        if operator in ("/", "%") and dtype == "i32":
+            helper = "div" if operator == "/" else "mod"
+            return f"myrk_{helper}_i32({left}, {right})"
+        return f"({left} {operator} {right})"
 
     def statement(self, item: Instruction, indent: int) -> list[str]:
         pad = "    " * indent
@@ -175,13 +192,19 @@ class CGenerator:
             self.resources[-1].append(name)
             return lines + [f"{pad}int32_t {name}_size = {size};",
                 f"{pad}{C_TYPES[dtype]} *{name} = myrk_alloc({name}_size, sizeof({C_TYPES[dtype]}));"]
-        if item.op == "store":
+        if item.op in ("store", "compound_store"):
+            name = item.data if item.op == "store" else item.data[0]
             lines, index = self.value(item.args[0], indent)
             assignment, index = self.temporary("i32",
-                f"myrk_index({index}, {item.data}_size)", indent)
+                f"myrk_index({index}, {name}_size)", indent)
             lines.append(assignment)
+            if item.op == "compound_store":
+                assignment, old = self.temporary(item.args[1].dtype, f"{name}[{index}]", indent)
+                lines.append(assignment)
             value_lines, value = self.value(item.args[1], indent)
-            return lines + value_lines + [f"{pad}{item.data}[{index}] = {value};"]
+            if item.op == "compound_store":
+                value = self.binary_expression(item.data[1], item.args[1].dtype, old, value)
+            return lines + value_lines + [f"{pad}{name}[{index}] = {value};"]
         if item.op == "declare":
             cname, dtype = item.data
             lines, value = self.value(item.args[0], indent)
@@ -190,10 +213,15 @@ class CGenerator:
             lines, value = self.value(item.args[0], indent)
             return lines + [f"{pad}{item.data} = {value};"]
         if item.op == "return":
+            cleanup = self.cleanup([name for scope in self.resources for name in scope], indent)
+            if not item.args:
+                return cleanup + [f"{pad}return;"]
             lines, value = self.value(item.args[0], indent)
             assignment, value = self.temporary(item.args[0].dtype, value, indent)
-            cleanup = self.cleanup([name for scope in self.resources for name in scope], indent)
             return lines + [assignment] + cleanup + [f"{pad}return {value};"]
+        if item.op == "discard":
+            lines, value = self.value(item.args[0], indent)
+            return lines + ([f"{pad}(void)({value});"] if value else [])
         if item.op == "print":
             value = item.args[0]
             lines, rendered = self.value(value, indent)
@@ -229,7 +257,21 @@ class CGenerator:
                  "#include <stdbool.h>", "#include <stdint.h>",
                  "#include <stdio.h>", "#include <stdlib.h>",
                  "#include <limits.h>",
+                 "#include <float.h>",
                  "#include <math.h>",
+                 "static int32_t myrk_cast_i32(double value) {",
+                 "    double integer = trunc(value);",
+                 "    if (!isfinite(integer) || integer < (double)INT32_MIN || integer > (double)INT32_MAX) {",
+                 '        fputs("Myrk runtime error: invalid numeric cast to i32\\n", stderr); exit(70);',
+                 "    }",
+                 "    return (int32_t)integer;",
+                 "}",
+                 "static float myrk_cast_f32(double value) {",
+                 "    if (isfinite(value) && fabs(value) > (double)FLT_MAX) {",
+                 '        fputs("Myrk runtime error: invalid numeric cast to f32\\n", stderr); exit(70);',
+                 "    }",
+                 "    return (float)value;",
+                 "}",
                  "static void *myrk_alloc(int32_t n, size_t width) {",
                  "    if (n < 0 || (size_t)n > SIZE_MAX / width) {",
                  '        fputs("Myrk runtime error: invalid buffer size\\n", stderr); exit(70);',
