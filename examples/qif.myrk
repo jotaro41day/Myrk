@@ -1,0 +1,8 @@
+fn main() -> i32 {
+    population p: QIF<f32>(size=1000, dt=0.1f32, current=500.0f32, capacitance=200.0f32, k=0.7f32, v_rest=-60.0f32, v_critical=-40.0f32, v_init=-65.0f32, v_reset=-65.0f32, v_threshold=30.0f32);
+    var count: i32 = 0;
+    for t in 0..400 { step(p); count = count + spikes(p); }
+    print(count);
+    print(voltage(p,0));
+    return 0;
+}

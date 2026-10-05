@@ -4,6 +4,7 @@ from fractions import Fraction
 from .ir import Instruction, Module, Procedure, Value, PopulationSpec, UniformParameter
 from .lexer import MyrkError
 from .syntax import Expr, Function, Pos, Stmt
+from .models import MODELS, STATE_QUERIES, QUERY_MODELS, canonical_model
 
 
 TYPES = {"i32", "f32", "f64", "bool"}
@@ -16,6 +17,7 @@ class Symbol:
     cname: str
     mutable: bool
     kind: str = "scalar"
+    model: str = ""
 
 
 class Checker:
@@ -31,10 +33,10 @@ class Checker:
             raise MyrkError(pos, f"unknown type {name!r}; expected i32, f32, f64 or bool")
         return name
 
-    def add_symbol(self, name: str, dtype: str, mutable: bool, pos: Pos, kind: str = "scalar") -> Symbol:
+    def add_symbol(self, name: str, dtype: str, mutable: bool, pos: Pos, kind: str = "scalar", model: str = "") -> Symbol:
         if name in self.scopes[-1]:
             raise MyrkError(pos, f"duplicate declaration of {name!r}")
-        symbol = Symbol(dtype, f"myrk_v_{self.next_symbol}", mutable, kind)
+        symbol = Symbol(dtype, f"myrk_v_{self.next_symbol}", mutable, kind, model)
         self.next_symbol += 1
         self.scopes[-1][name] = symbol
         return symbol
@@ -47,7 +49,7 @@ class Checker:
 
     def check(self) -> Module:
         for function in self.functions:
-            if function.name in self.signatures or function.name in {"print", "step", "spikes", "voltage", "recovery"}:
+            if function.name in self.signatures or function.name in {"print", "step", "spikes", *STATE_QUERIES}:
                 raise MyrkError(function.pos, f"duplicate or reserved function {function.name!r}")
             params = tuple(self.type_name(t, p) for _, t, p in function.params)
             result = self.type_name(function.result, function.pos)
@@ -84,16 +86,19 @@ class Checker:
         op = statement.kind
         if op == "population":
             name, model, dtype = statement.value
-            if model != "Izhikevich":
+            canonical = canonical_model(model)
+            if canonical is None:
                 raise MyrkError(statement.pos, f"unknown neuron model {model!r}")
+            model = canonical
+            definition = MODELS[model]
             if dtype not in ("f32", "f64"):
                 raise MyrkError(statement.pos, "population precision must be f32 or f64")
             params = dict(statement.args)
             if len(params) != len(statement.args):
                 raise MyrkError(statement.pos, "duplicate population parameter")
-            names = ("a", "b", "c", "d", "dt", "current")
+            names = definition.parameters
             if set(params) != {"size", *names}:
-                raise MyrkError(statement.pos, "population parameters must be size, a, b, c, d, dt, current")
+                raise MyrkError(statement.pos, "population parameters must be size, " + ", ".join(names))
             size = self.expression(params["size"])
             self.require(size, "i32", size.pos)
             uniform = []
@@ -103,15 +108,18 @@ class Checker:
                 self.require(value, dtype, value.pos)
                 text, number = self.literal_float(expr, dtype)
                 half_subnormal = Fraction(1, 2 ** (150 if dtype == "f32" else 1075))
-                if param == "dt" and number <= half_subnormal:
-                    raise MyrkError(expr.pos, "dt must be positive in its precision")
+                if param in definition.positive and number <= half_subnormal:
+                    raise MyrkError(expr.pos, f"{param} must be positive in its precision")
+                if param in definition.nonnegative and number < 0:
+                    raise MyrkError(expr.pos, f"{param} must be nonnegative")
                 uniform.append(UniformParameter(param, Value("constant", dtype, expr.pos, text)))
-            symbol = self.add_symbol(name, dtype, False, statement.pos, "population")
-            spec = PopulationSpec(symbol.cname, dtype, size, tuple(uniform))
+            symbol = self.add_symbol(name, dtype, False, statement.pos, "population", model)
+            spec = PopulationSpec(symbol.cname, dtype, size, tuple(uniform), model=model,
+                                  solver=definition.solver, states=definition.states)
             return Instruction(op, statement.pos, spec)
         if op == "step":
             symbol = self.population(statement.value, statement.pos)
-            return Instruction(op, statement.pos, (symbol.cname, symbol.dtype))
+            return Instruction(op, statement.pos, (symbol.cname, symbol.dtype, symbol.model))
         if op == "buffer":
             name, dtype = statement.value
             if dtype not in ("f32", "f64"):
@@ -210,11 +218,14 @@ class Checker:
                 raise MyrkError(expr.pos, f"expected scalar, found {symbol.kind}")
             return Value("variable", symbol.dtype, expr.pos, symbol.cname)
         if expr.kind == "call":
-            if expr.value in ("spikes", "voltage", "recovery"):
+            if expr.value in {"spikes", *STATE_QUERIES}:
                 count = 1 if expr.value == "spikes" else 2
                 if len(expr.args) != count or expr.args[0].kind != "name":
                     raise MyrkError(expr.pos, f"{expr.value} expects a population name and {count-1} indices")
                 symbol = self.population(expr.args[0].value, expr.pos)
+                required_model = QUERY_MODELS.get(expr.value)
+                if required_model and symbol.model != required_model:
+                    raise MyrkError(expr.pos, f"{expr.value} requires {required_model}, found {symbol.model}")
                 args = ()
                 if count == 2:
                     index = self.expression(expr.args[1])

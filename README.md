@@ -10,7 +10,8 @@ questões de desempenho levantadas pelo [AresY](https://github.com/Jotaroofdioin
 
 **Estado atual:** funções, `i32`, `f32`, `f64`, `bool`, variáveis imutáveis (`let`)
 e mutáveis (`var`), laços `for` de faixa exclusiva, aritmética, comparações,
-`print` e `return`. Há buffers contíguos locais f32/f64 com índices verificados. Há populações Izhikevich f32/f64 (Euler simultâneo, SoA, parâmetros uniformes).
+`print` e `return`. Há buffers contíguos locais f32/f64 com índices verificados.
+Há populações nativas IF, LIF, QIF e Izhikevich em f32/f64, com SoA e parâmetros uniformes.
 Loops de populações independentes podem usar um pool CPU persistente via
 `MYRK_THREADS` e blocos de cache experimentais explícitos via `MYRK_TILE`.
 Ainda não há redes conectadas, tensores ou SIMD manual. Não há alegação de vantagem de desempenho.
@@ -95,6 +96,8 @@ estão em [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 
 ## Izhikevich nativo
+
+Os modelos oficiais, parâmetros e solvers estão em [NEURON_MODELS.md](docs/NEURON_MODELS.md).
 
 ```sh
 myrk run examples/vector.myrk

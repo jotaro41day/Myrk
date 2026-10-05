@@ -13,6 +13,7 @@ def batch_populations(module):
             start,end,children=item.args
             accumulator=None
             eligible=len(children) in (1,2) and children[0].op=='step'
+            eligible=eligible and children[0].data[2]=='Izhikevich'
             if eligible and len(children)==2:
                 update=children[1]
                 eligible=update.op=='assign'
@@ -25,11 +26,10 @@ def batch_populations(module):
                                   and right.op=='spikes' and right.data==children[0].data[0])
                         accumulator=update.data
             if eligible:
-                name,dtype=children[0].data
+                name,dtype,_=children[0].data
                 result.append(Instruction('advance',item.pos,(name,dtype,accumulator),(start,end,item)))
             else:
                 result.append(replace(item,args=(start,end,block(children))))
         return tuple(result)
-    # At present step is exclusively the independent, uniform-current Izhikevich
-    # operation. New neural operations/dependencies must not inherit this proof.
+    # Only Izhikevich currently has a batch proof; other models remain sequential.
     return replace(module,procedures=tuple(replace(p,body=block(p.body)) for p in module.procedures))

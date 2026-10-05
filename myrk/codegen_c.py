@@ -2,6 +2,8 @@ from .ir import Instruction, Module, Value
 from .neural import kernel, batch_kernel
 from .optimize import batch_populations
 from .runtime_cpu import PTHREAD_RUNTIME
+from .models import STATE_QUERIES, population_type, prefix
+from .model_kernels import kernel as model_kernel
 
 
 C_TYPES = {"i32": "int32_t", "f32": "float", "f64": "double", "bool": "bool"}
@@ -32,9 +34,9 @@ class CGenerator:
     def value(self, item: Value, indent: int) -> tuple[list[str], str]:
         if item.op == "spikes":
             return [], f"{item.data}.spikes"
-        if item.op in ("voltage", "recovery"):
+        if item.op in STATE_QUERIES:
             lines, index = self.value(item.args[0], indent)
-            field = "v" if item.op == "voltage" else "u"
+            field = STATE_QUERIES[item.op]
             assignment, name = self.temporary(item.dtype,
                 f"{item.data}.{field}[myrk_index({index}, {item.data}.size)]", indent)
             return lines + [assignment], name
@@ -111,20 +113,25 @@ class CGenerator:
             spec = item.data
             name = spec.name
             lines, size = self.value(spec.size, indent)
-            lines += [f"{pad}myrk_population_{spec.precision} {name};",
+            lines += [f"{pad}{population_type(spec.model,spec.precision)} {name};",
                       f"{pad}{name}.size = {size};", f"{pad}{name}.spikes = 0;"]
             for parameter in spec.parameters:
                 _, value = self.value(parameter.value, indent)
                 lines.append(f"{pad}{name}.{parameter.name} = {value};")
-            for state in ("v", "u"):
+            for state in spec.states:
                 lines.append(f"{pad}{name}.{state} = myrk_alloc({name}.size, sizeof({C_TYPES[spec.precision]}));")
                 self.resources[-1].append(f"{name}.{state}")
-            lines += [f"{pad}for (int32_t i = 0; i < {name}.size; ++i) {{",
-                      f"{pad}    {name}.v[i] = {name}.c;",
-                      f"{pad}    {name}.u[i] = {name}.b * {name}.c;", f"{pad}}}"]
+            if spec.model == "Izhikevich":
+                lines += [f"{pad}for (int32_t i = 0; i < {name}.size; ++i) {{",
+                          f"{pad}    {name}.v[i] = {name}.c;",
+                          f"{pad}    {name}.u[i] = {name}.b * {name}.c;", f"{pad}}}"]
+            else:
+                lines.append(f"{pad}{prefix(spec.model,spec.precision)}_initialize(&{name});")
             return lines
         if item.op == "step":
-            name, dtype = item.data
+            name, dtype, model = item.data
+            if model != "Izhikevich":
+                return [f"{pad}{name}.spikes = {prefix(model,dtype)}_step(&{name});"]
             args = ', '.join(f"{name}.{field}" for field in ("size", "v", "u", "a", "b", "c", "d", "dt", "current"))
             return [f"{pad}{name}.spikes = myrk_izh_{dtype}_step({args});"]
         if item.op == "buffer":
@@ -185,6 +192,7 @@ class CGenerator:
                  "#include <stdbool.h>", "#include <stdint.h>",
                  "#include <stdio.h>", "#include <stdlib.h>",
                  "#include <limits.h>",
+                 "#include <math.h>",
                  "static void *myrk_alloc(int32_t n, size_t width) {",
                  "    if (n < 0 || (size_t)n > SIZE_MAX / width) {",
                  '        fputs("Myrk runtime error: invalid buffer size\\n", stderr); exit(70);',
@@ -214,15 +222,18 @@ class CGenerator:
         def precisions(body):
             for item in body:
                 if item.op == "population":
-                    yield item.data.precision
+                    yield item.data.model, item.data.precision
                 elif item.op == "for":
                     yield from precisions(item.args[2])
         neural_types = sorted({dtype for p in module.procedures for dtype in precisions(p.body)})
         if neural_types:
             lines.append(PTHREAD_RUNTIME)
-        for dtype in neural_types:
-            lines.append(kernel(dtype))
-            lines.append(batch_kernel(dtype))
+        for model,dtype in neural_types:
+            if model == "Izhikevich":
+                lines.append(kernel(dtype))
+                lines.append(batch_kernel(dtype))
+            else:
+                lines.append(model_kernel(model,dtype))
         for procedure in module.procedures:
             params = ", ".join(f"{C_TYPES[dtype]} {name}" for name, dtype in procedure.params) or "void"
             lines.append(f"static {C_TYPES[procedure.result]} myrk_f_{procedure.name}({params});")

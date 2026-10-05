@@ -49,3 +49,4 @@ class PopulationSpec:
     model: str = "Izhikevich"
     solver: str = "euler_simultaneous"
     layout: str = "soa"
+    states: tuple[str, ...] = ("v", "u")

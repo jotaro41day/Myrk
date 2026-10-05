@@ -22,7 +22,7 @@ def build(c_source: str, output: Path, compiler: str) -> None:
         c_file = Path(temp) / "program.c"
         c_file.write_text(c_source, encoding="utf-8")
         command = [compiler, "-std=c11", "-O2", "-fwrapv", "-fno-fast-math",
-                   "-ffp-contract=off", "-pthread", str(c_file), "-o", str(output)]
+                   "-ffp-contract=off", "-pthread", str(c_file), "-o", str(output), "-lm"]
         completed = subprocess.run(command, text=True, capture_output=True)
         if completed.returncode:
             raise RuntimeError(f"native compiler failed:\n{completed.stderr.strip()}")

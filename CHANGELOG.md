@@ -9,6 +9,8 @@
 
 ## Unreleased
 
+- Modelos nativos IF, LIF e QIF em f32/f64; catálogo semântico e estados SoA específicos, referências e exemplos. Batching permanece restrito ao Izhikevich.
+
 - Buffers locais contíguos f32/f64, índices verificados e liberação por escopo.
 - Prioridade SNN/Izhikevich documentada no ADR 0002.
 - Populações Izhikevich f32/f64 na IR e no backend CPU; referência arredondada por operação.
