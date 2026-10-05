@@ -10,6 +10,7 @@
 ## Unreleased
 
 - Modelos nativos IF, LIF e QIF em f32/f64; catálogo semântico e estados SoA específicos, referências e exemplos. Batching permanece restrito ao Izhikevich.
+- AdEx nativo v/w e HH nativo v/m/h/n em f32/f64; consultas adaptation/gate_m/gate_h/gate_n. HH usa tensão Euler, gates Rush–Larsen, taxas singulares estáveis e spikes por cruzamento sem reset.
 
 - Buffers locais contíguos f32/f64, índices verificados e liberação por escopo.
 - Prioridade SNN/Izhikevich documentada no ADR 0002.

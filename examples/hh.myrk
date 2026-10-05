@@ -1,0 +1,11 @@
+fn main() -> i32 {
+    population p: HH<f32>(size=1000, dt=0.01f32, current=10.0f32, capacitance=1.0f32, g_na=120.0f32, g_k=36.0f32, g_leak=0.3f32, e_na=50.0f32, e_k=-77.0f32, e_leak=-54.387f32, v_init=-65.0f32, v_threshold=0.0f32);
+    var count: i32 = 0;
+    for t in 0..1000 { step(p); count = count + spikes(p); }
+    print(count);
+    print(voltage(p,0));
+    print(gate_m(p,0));
+    print(gate_h(p,0));
+    print(gate_n(p,0));
+    return 0;
+}

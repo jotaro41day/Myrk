@@ -11,9 +11,9 @@ User has authorized autonomous implementation and frequent publication.
 - [x] Write failing IF/LIF/QIF type/native/reference tests.
 - [x] Add catalog, model-aware symbols/steps, generic owned states and kernels.
 - [x] Verify full suite, add examples/contracts, commit and publish basic models.
-- [ ] Write failing AdEx/HH query/rate/trajectory tests.
-- [ ] Add exponential adaptation, stable HH rates and Rush–Larsen gates.
-- [ ] Verify full suite, add examples/contracts, commit and publish AdEx/HH.
+- [x] Write failing AdEx/HH query/rate/trajectory tests.
+- [x] Add exponential adaptation, stable HH rates and Rush–Larsen gates.
+- [x] Verify full suite, add examples/contracts, commit and publish AdEx/HH.
 - [ ] Add independent C reference and correctness-gated model-update benchmark.
 - [ ] Validate all models/dtypes, update README/roadmap/CI/development state.
 - [ ] Run GCC/Clang checks and review; publish final verified increment.

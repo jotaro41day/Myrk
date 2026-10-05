@@ -20,7 +20,7 @@ validado para preservar o progresso se a sessão terminar.
   Laboratório compara todos os estados e spikes antes de reportar desempenho.
 - Sweep 1K/10K/100K/1M/2M/5M/10M f32/f64 em Xeon, GCC O2/O3 e Clang O2.
   Dados preservados em docs/measurements, resumo em PERFORMANCE/MILLION_NEURON_PLAN.
-- 51 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
+- 69 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
   passaram com ASan/UBSan. CI Linux passa; matriz GCC/Clang verifica ambos.
 - Revisão corrigiu duplo arredondamento de parâmetros f32: preservar decimal
   original no C, limites exatos com Fraction. Não reintroduzir conversão via f64.
@@ -46,6 +46,16 @@ com tile2048 f64. Tile16384/1thread/10M f32 ~11% sobre step da mesma sessão;
 1M praticamente empatado. Não promover valor automático nem alegar ganho
 Android. O callback mantém NEON no cross compile. Próximo gate é ablação no
 Termux, não repetir instalação/bootstrap/pesquisa já existentes.
+
+## Modelos oficiais
+
+IF, LIF, Izhikevich, QIF, AdEx e HH nativos em f32/f64. Catálogo estático
+myrk/models.py preserva modelo/solver/estados na IR. IF/LIF/QIF usam v; AdEx
+v/w; HH v/m/h/n, Euler tensão + Rush–Larsen gates, taxas expm1 estáveis e
+spikes por cruzamento sem reset. Adaptação/gates têm consultas tipadas e
+índices verificados. Exemplos e contratos em docs/NEURON_MODELS.md. Batching
+continua restrito ao Izhikevich. Referência Python cobre novos modelos;
+benchmark C independente/unificado é o incremento em andamento.
 
 ## Evidência e limites
 

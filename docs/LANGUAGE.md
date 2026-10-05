@@ -51,6 +51,17 @@ v=c, u=u_next+d. Fórmulas e ordem exatas: [ADR 0002](decisions/0002-snn-populat
 Não é o solver clássico com dois meios passos. Não há lista de spikes,
 sinapses, delays, monitores automáticos ou seleção de solver ainda.
 
+## Outros modelos oficiais
+
+IF, LIF, QIF, AdEx e HH também são populações nativas f32/f64. Modelo, solver,
+parâmetros uniformes e estados SoA chegam explicitamente à IR. Consultas novas:
+adaptation(p,i) para AdEx, gate_m/gate_h/gate_n(p,i) para HH. recovery(p,i)
+requer Izhikevich; consultas incompatíveis são erros de tipo. Nomes de modelos
+são case-insensitive; nomes de builtins são reservados e case-sensitive.
+Contratos, unidades, parâmetros, equações e exemplos: [NEURON_MODELS.md](NEURON_MODELS.md).
+Só Izhikevich participa do batching/pool nesta versão; outros modelos seguem
+loops nativos sequenciais. HH não possui reset: conta cruzamentos ascendentes.
+
 ## Execução de populações em lote e CPU threads
 
 O compilador pode agrupar um `for` cujo corpo seja somente `step(p);` ou
