@@ -20,7 +20,7 @@ validado para preservar o progresso se a sessão terminar.
   Laboratório compara todos os estados e spikes antes de reportar desempenho.
 - Sweep 1K/10K/100K/1M/2M/5M/10M f32/f64 em Xeon, GCC O2/O3 e Clang O2.
   Dados preservados em docs/measurements, resumo em PERFORMANCE/MILLION_NEURON_PLAN.
-- 69 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
+- 74 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
   passaram com ASan/UBSan. CI Linux passa; matriz GCC/Clang verifica ambos.
 - Revisão corrigiu duplo arredondamento de parâmetros f32: preservar decimal
   original no C, limites exatos com Fraction. Não reintroduzir conversão via f64.
@@ -54,8 +54,14 @@ myrk/models.py preserva modelo/solver/estados na IR. IF/LIF/QIF usam v; AdEx
 v/w; HH v/m/h/n, Euler tensão + Rush–Larsen gates, taxas expm1 estáveis e
 spikes por cruzamento sem reset. Adaptação/gates têm consultas tipadas e
 índices verificados. Exemplos e contratos em docs/NEURON_MODELS.md. Batching
-continua restrito ao Izhikevich. Referência Python cobre novos modelos;
-benchmark C independente/unificado é o incremento em andamento.
+continua restrito ao Izhikevich. Laboratório complementar benchmarks.neuron.models
+tem C independente e Python para os cinco novos modelos, gates de todos os
+estados/spikes por timestep e hash por amostra. Baselines Clang em 1K/10K
+preservados em docs/measurements/2026-10-05-official-models-clang.json.
+LIF nativo também confere o baseline original C/Python (64×200), em sete
+populações por corrente; todos os 64 estados são realmente atualizados.
+Não confundir unidade point-neuron pF/nS/pA com HH uF/mS/uA por cm².
+No HH a temperatura das taxas é 6.3 C, sem scaling implícito.
 
 ## Evidência e limites
 
@@ -82,8 +88,9 @@ não bloquear desenvolvimento por isso.
    benchmark dedicado para acesso genérico de buffers e passagem entre funções
    ainda não estão implementados. Não tratar o benchmark de população como
    prova do desempenho de todos os loops genéricos.
-5. [#3](https://github.com/jotaro41day/Myrk/issues/3): LIF compilado adiado na
-   nova ordem; manter referência existente. GPU/autotuning/AD vêm depois.
+5. LIF/IF/QIF/AdEx/HH básicos implementados; otimizações novas exigem prova,
+   baselines e validação Android próprias. HH/AdEx exp/expm1 ainda são libm
+   escalar; aproximações futuras devem ser explícitas. GPU/autotuning/AD vêm depois.
 
 ## Comandos de verificação
 
@@ -94,6 +101,7 @@ python3 -m compileall -q myrk benchmarks tests
 sh -n install.sh
 python3 -m myrk run examples/izhikevich.myrk
 python3 -m benchmarks.neuron.izhikevich --sizes 17 1000 --steps 80 --repeat 1 --warmup 0
+python3 -m benchmarks.neuron.models --sizes 17 --steps 40 --repeat 1 --warmup 0 --summary
 ```
 
 Para retomar: `git status`, ler ADR 0002/ROADMAP/PERFORMANCE e verificar

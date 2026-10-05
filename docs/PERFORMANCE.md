@@ -360,3 +360,78 @@ Raw JSON: [2 threads / tile0](measurements/2026-10-05-tile-two-threads-0.json),
 [tile16384](measurements/2026-10-05-tile-two-threads-16384.json),
 [1 thread / tile0](measurements/2026-10-05-tile-one-thread-0.json),
 [tile16384](measurements/2026-10-05-tile-one-thread-16384.json).
+
+## Baseline 0006 — modelos oficiais IF/LIF/QIF/AdEx/HH
+
+Hipótese: ampliar os modelos exige semântica/estado/solver próprios e oráculos;
+não há hipótese de vantagem de desempenho neste incremento. Izhikevich mantém
+kernel, solver, ABI e laboratório anteriores. O catálogo estático identifica os
+novos modelos na IR; C emite somente kernels necessários. Ver ADR 0004 e
+[NEURON_MODELS.md](NEURON_MODELS.md) para equações/unidades/ordem de updates.
+
+Corretude: referências Python independentes (arredondamento de cada operação
+f32) e C independentes, todos os estados/counts por timestep e inicialização.
+LIF adicionalmente confere o C/Python legado em 64×200 (sete populações por
+corrente, 64 estados reais) e sua solução discreta subthreshold em forma fechada.
+HH cobre limites alpha_m(-40)/alpha_n(-55), equilíbrio em repouso, gates e
+cruzamento ascendente sem reset. AdEx usa v/w antigos, adicionando b a w_next
+após threshold. C/native usam as mesmas verificações de estados não finitos em
+AdEx/HH; a revisão encontrou e corrigiu a omissão inicial na referência C.
+Mutação no update HH é rejeitada; C/Myrk com HH dt=1000 falham igualmente com
+code70 em vez de produzir estados não finitos. Queries incompatíveis são erros
+de tipo; estados/índices/escopo/retornos mantêm ownership existente.
+74 testes passaram GCC14.2/Clang19.1.7; instalador reinstalado e seis exemplos
+executados fora do checkout. Seis exemplos passaram ASan/UBSan (GCC, O1).
+
+Medição: core d572c20 + laboratório complementar agora preservado neste commit;
+2026-10-05, Xeon Platinum 8573C, Linux cloud compartilhada, quota2CPU/8GiB,
+Clang19.1.7, uma thread, O2 -fwrapv -fno-fast-math -ffp-contract=off -pthread,
+-lm. 1K/10K, ambos dtypes, 200 passos, 1 warmup, 3 amostras alternando ordem.
+Cada amostra confere hash/somas/total/último count; falhas anulam o relatório.
+Estado inicial heterogêneo v_init+(i%17)*.125, com gates HH em equilíbrio em
+cada tensão; todo elemento é atualizado, sem colapsar estados repetidos.
+Timer CLOCK_MONOTONIC exclui allocate/init/hash/IO; process time no JSON inclui
+esses custos. RSS é VmHWM do próprio processo. Sem pinning, counters ou controle
+térmico. Duração biológica varia: IF/LIF/QIF/AdEx dt=.1ms (20ms); HH dt=.01ms
+(2ms). **Modelos/solvers diferentes não são trabalho equivalente entre si.**
+
+Resultados abaixo: 10K neurônios, mediana de kernel, Myrk/C no mesmo dtype,
+modelo, solver, dt, estado, contagens e thread. São baselines, não otimizações.
+
+| Modelo | dtype | dt ms | Myrk ms | C ms | M updates/s | realtime | bytes/neuron |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| IF | f32 | 0.1 | 0.342 | 0.452 | 5851.5 | 58.515 | 4 |
+| IF | f64 | 0.1 | 0.851 | 0.894 | 2349.7 | 23.497 | 8 |
+| LIF | f32 | 0.1 | 0.856 | 1.344 | 2337.5 | 23.375 | 4 |
+| LIF | f64 | 0.1 | 2.276 | 2.028 | 878.9 | 8.789 | 8 |
+| QIF | f32 | 0.1 | 1.083 | 1.289 | 1846.9 | 18.469 | 4 |
+| QIF | f64 | 0.1 | 2.404 | 2.994 | 832.1 | 8.321 | 8 |
+| AdEx | f32 | 0.1 | 16.859 | 20.386 | 118.6 | 1.186 | 8 |
+| AdEx | f64 | 0.1 | 37.704 | 24.607 | 53.0 | 0.530 | 16 |
+| HH | f32 | 0.01 | 115.635 | 108.824 | 17.3 | 0.017 | 16 |
+| HH | f64 | 0.01 | 149.566 | 154.556 | 13.4 | 0.013 | 32 |
+
+Há amostras muito curtas e forte variação (inclusive C LIF/1K mais lento que
+C LIF/10K nessa sessão). O raw conserva todas as amostras, sem selecionar
+mínimos ou inferir speedups desses valores. RAM state f32: IF/LIF/QIF4 B/neuron,
+AdEx8, HH16; f64 dobra. Tráfego lógico load/store por update: 8/16/32 B f32,
+16/32/64 B f64, sem parâmetros replicados. Isso não mede bandwidth DRAM.
+
+Cross assembly AArch64/Android24 Clang19, O2 estrito, f32: **update** IF/LIF/QIF
+contém NEON `.4s` com width4/interleave2 e compare/select/redução. AdEx e HH
+vetorizam somente inicialização; seus updates permanecem escalares, com chamadas
+expf/expm1f e guards. Não confundir isso com update vetorizado. Não houve
+execução Android; links libm/CLI/instalação novos aguardam teste no Termux real.
+
+Decisão: manter as seis implementações corretas com contratos explícitos,
+sem anunciar kernels HH/AdEx otimizados. Batching/multicore permanece restrito
+à prova Izhikevich. Próximos experimentos: vector math estrito ou modo aproximado
+explicitamente selecionado, custo das taxas/gates, solver convergence, prova de
+batch para novos modelos e medidas Android. Nenhum fast-math/quantização oculto.
+
+```sh
+CC=clang python3 -m benchmarks.neuron.models --sizes 1000 10000 \
+  --steps 200 --repeat 3 --warmup 1 --summary --output official-models.json
+```
+
+[JSON completo](measurements/2026-10-05-official-models-clang.json).

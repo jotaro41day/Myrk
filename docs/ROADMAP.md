@@ -1,4 +1,4 @@
-# Roadmap SNN — prioridades revisadas em 2026-10-04
+# Roadmap SNN — prioridades revisadas em 2026-10-05
 
 Meta de engenharia: perseguir a toolchain SNN mais rápida possível, com foco
 inicial em Android/Termux/AArch64. Não é uma afirmação de liderança medida.
@@ -13,7 +13,7 @@ a workload/target deve permanecer condicionado, sem fast-math implícita.
 | --- | --- | --- |
 | M0/M1 | Pesquisa, ADR, frontend/IR tipada, C11 nativo, benchmarks iniciais | Base existente; 17 testes e benchmarks relatados no Termux |
 | M2 | Buffers locais contíguos f32/f64, limites e ownership por escopo | Implementado/testado Linux; Android novo código pendente; empréstimos entre funções futuros |
-| M3 | Population/UniformParameter na IR, Izhikevich Euler explícito, oráculos C/Python, trajetórias e spikes | Implementado/testado Linux; exemplo nativo; validação Android pendente |
+| M3 | Modelos oficiais/Population/UniformParameter na IR, solvers explícitos, oráculos C/Python | IF/LIF/Izhikevich/QIF/AdEx/HH f32/f64 implementados/testados Linux; seis exemplos; Android pendente |
 | M4 | Lab 1K→10M, memória, throughput, timestep, realtime, estados e precisão | Sweep CPU x86 realizado; tabela no MILLION_NEURON_PLAN; Termux pendente |
 | M5 | Layout SoA/AoSoA, especialização e NEON/SIMD | SoA baseline; NEON no cross compile; cache blocking temporal explícito medido em x86, sem valor automático. Ablação Termux pendente |
 | M6 | SpikeSet: máscara, bitset, compactação | Medir atividade/custo de conversão; equivalência e throughput de compactação |
@@ -21,7 +21,7 @@ a workload/target deve permanecer condicionado, sem fast-math implícita.
 | M8 | Sinapses reais: CSR, índices menores, propagação | Eventos/s, bytes/sinapse, oracle de conectividade; comparar formatos/ordens e conectividade procedural |
 | M9 | Delays limitados, ring/buckets; rede conectada | Spike trace e delays corretos; 1M/fanout 10→100→1000 conforme orçamento |
 | M10 | Estratégias por população/projeção, híbrido/event/time | Crossover medido e semântica preservada; Izhikevich não pode pular passos por ausência de spikes |
-| M11 | Plasticidade, LIF compilado e outros modelos/solvers/monitores | Precisão equivalente e custo explícito de monitoramento; referência LIF existente mantida |
+| M11 | Plasticidade, outros solvers/monitores e extensões de modelos | Seis modelos básicos já implementados no M3. Precisão equivalente, refractory/temperatura e monitoramento explícitos seguem pendentes |
 | M12+ | Autotuning cacheado, tensores/BLAS/autodiff, GPU | Somente após kernels e workloads sólidos; nenhum requisito CUDA |
 
 A IR preservará progressivamente modelo, solver, clock, precisão, uniformidade,

@@ -1,0 +1,1926 @@
+{
+  "category": "neuron_update",
+  "mode": "strict; no FMA contraction",
+  "threads": 1,
+  "compiler": "Debian clang version 19.1.7 (3+b1)",
+  "steps": 200,
+  "repeat": 3,
+  "warmup": 1,
+  "initialization": "v_init+(i%17)*0.125; HH gates at equilibrium of varied initial v",
+  "hardware": {
+    "machine": "x86_64",
+    "system": "Linux-6.18.44-x86_64-with-glibc2.41"
+  },
+  "results": [
+    {
+      "model": "IF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 4000,
+      "validation_payload_bytes": 8000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 4.659897999772511,
+        "native_compile_ms": 290.6707850006569,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.03312899934826419,
+        "samples_ms": [
+          0.03307699989818502,
+          0.03312900025775889,
+          0.03312899934826419
+        ],
+        "ms_per_timestep": 0.00016564499674132094,
+        "updates_per_second": 6037006970.766809,
+        "realtime_factor": 603.700697076681,
+        "threads": 1,
+        "peak_rss_kib_median": 768,
+        "process_median_ms": 3.9584760006619035,
+        "spikes": 3000,
+        "last_spikes": 0,
+        "state_hash": "66251abd4cf65c69",
+        "sums": [
+          -59061.5
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.03428600030019879,
+        "samples_ms": [
+          0.033895999877131544,
+          0.03428600030019879,
+          0.03433199981373036
+        ],
+        "ms_per_timestep": 0.00017143000150099397,
+        "updates_per_second": 5833284671.552674,
+        "realtime_factor": 583.3284671552674,
+        "threads": 1,
+        "peak_rss_kib_median": 768,
+        "process_median_ms": 2.2707500002070446,
+        "spikes": 3000,
+        "last_spikes": 0,
+        "state_hash": "66251abd4cf65c69",
+        "sums": [
+          -59061.5
+        ]
+      }
+    },
+    {
+      "model": "IF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 40000,
+      "validation_payload_bytes": 80000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 4.659897999772511,
+        "native_compile_ms": 290.6707850006569,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.34179500016762177,
+        "samples_ms": [
+          0.3403390001039952,
+          0.34179500016762177,
+          0.5580039996857522
+        ],
+        "ms_per_timestep": 0.0017089750008381088,
+        "updates_per_second": 5851460668.000316,
+        "realtime_factor": 58.514606680003155,
+        "threads": 1,
+        "peak_rss_kib_median": 808,
+        "process_median_ms": 5.2552919996742276,
+        "spikes": 30000,
+        "last_spikes": 0,
+        "state_hash": "fd4fb937876cf3a1",
+        "sums": [
+          -590591.5
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.45214799956738716,
+        "samples_ms": [
+          0.45214799956738716,
+          2.655231999597163,
+          0.36026699945068685
+        ],
+        "ms_per_timestep": 0.002260739997836936,
+        "updates_per_second": 4423330418.1674795,
+        "realtime_factor": 44.2333041816748,
+        "threads": 1,
+        "peak_rss_kib_median": 804,
+        "process_median_ms": 2.0436079994397005,
+        "spikes": 30000,
+        "last_spikes": 0,
+        "state_hash": "fd4fb937876cf3a1",
+        "sums": [
+          -590591.5
+        ]
+      }
+    },
+    {
+      "model": "IF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000,
+      "validation_payload_bytes": 16000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7104020005499478,
+        "native_compile_ms": 292.5900889995319,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.08065099973464385,
+        "samples_ms": [
+          0.08065099973464385,
+          0.0800219995653606,
+          0.12279400016268482
+        ],
+        "ms_per_timestep": 0.00040325499867321923,
+        "updates_per_second": 2479820469.157675,
+        "realtime_factor": 247.98204691576748,
+        "threads": 1,
+        "peak_rss_kib_median": 772,
+        "process_median_ms": 2.059888000076171,
+        "spikes": 3000,
+        "last_spikes": 0,
+        "state_hash": "93175992ac89fb05",
+        "sums": [
+          -59061.5
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.1119819999075844,
+        "samples_ms": [
+          0.1119819999075844,
+          0.08023499958653701,
+          1.0778619998745853
+        ],
+        "ms_per_timestep": 0.000559909999537922,
+        "updates_per_second": 1786001323.114915,
+        "realtime_factor": 178.60013231149148,
+        "threads": 1,
+        "peak_rss_kib_median": 776,
+        "process_median_ms": 5.314569000802294,
+        "spikes": 3000,
+        "last_spikes": 0,
+        "state_hash": "93175992ac89fb05",
+        "sums": [
+          -59061.5
+        ]
+      }
+    },
+    {
+      "model": "IF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000,
+      "validation_payload_bytes": 160000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7104020005499478,
+        "native_compile_ms": 292.5900889995319,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.8511730002283002,
+        "samples_ms": [
+          0.9025159997690935,
+          0.8511730002283002,
+          0.812843999483448
+        ],
+        "ms_per_timestep": 0.004255865001141501,
+        "updates_per_second": 2349698591.782826,
+        "realtime_factor": 23.49698591782826,
+        "threads": 1,
+        "peak_rss_kib_median": 848,
+        "process_median_ms": 3.882601999976032,
+        "spikes": 30000,
+        "last_spikes": 0,
+        "state_hash": "2ec5431566412b05",
+        "sums": [
+          -590591.5
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.8943589991758927,
+        "samples_ms": [
+          0.8943589991758927,
+          0.849999999445572,
+          1.2820439997085487
+        ],
+        "ms_per_timestep": 0.004471794995879463,
+        "updates_per_second": 2236238470.058333,
+        "realtime_factor": 22.36238470058333,
+        "threads": 1,
+        "peak_rss_kib_median": 848,
+        "process_median_ms": 3.5208529998271842,
+        "spikes": 30000,
+        "last_spikes": 0,
+        "state_hash": "2ec5431566412b05",
+        "sums": [
+          -590591.5
+        ]
+      }
+    },
+    {
+      "model": "LIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -65.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 4000,
+      "validation_payload_bytes": 8000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.6156619992907508,
+        "native_compile_ms": 431.1549069998364,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.07814800028427271,
+        "samples_ms": [
+          0.07782200009387452,
+          0.07814800028427271,
+          0.1140710000981926
+        ],
+        "ms_per_timestep": 0.00039074000142136356,
+        "updates_per_second": 2559246548.5038137,
+        "realtime_factor": 255.9246548503814,
+        "threads": 1,
+        "peak_rss_kib_median": 772,
+        "process_median_ms": 2.1614010001940187,
+        "spikes": 2000,
+        "last_spikes": 0,
+        "state_hash": "161078f4b5acae5b",
+        "sums": [
+          -51974.13810348511
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 1.7731469997670501,
+        "samples_ms": [
+          0.07768100022076396,
+          3.7836930005141767,
+          1.7731469997670501
+        ],
+        "ms_per_timestep": 0.00886573499883525,
+        "updates_per_second": 112793806.7324792,
+        "realtime_factor": 11.279380673247921,
+        "threads": 1,
+        "peak_rss_kib_median": 772,
+        "process_median_ms": 6.6662400004133815,
+        "spikes": 2000,
+        "last_spikes": 0,
+        "state_hash": "161078f4b5acae5b",
+        "sums": [
+          -51974.13810348511
+        ]
+      }
+    },
+    {
+      "model": "LIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -65.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 40000,
+      "validation_payload_bytes": 80000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.6156619992907508,
+        "native_compile_ms": 431.1549069998364,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.8556070006306982,
+        "samples_ms": [
+          2.3553740002171253,
+          0.8556070006306982,
+          0.8033780004552682
+        ],
+        "ms_per_timestep": 0.004278035003153491,
+        "updates_per_second": 2337521781.0580435,
+        "realtime_factor": 23.375217810580434,
+        "threads": 1,
+        "peak_rss_kib_median": 804,
+        "process_median_ms": 6.675872999949206,
+        "spikes": 20000,
+        "last_spikes": 0,
+        "state_hash": "c5ecc11826562477",
+        "sums": [
+          -519724.7939109802
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 1.3442010003927862,
+        "samples_ms": [
+          1.3442010003927862,
+          4.628050000064832,
+          0.765372999921965
+        ],
+        "ms_per_timestep": 0.006721005001963931,
+        "updates_per_second": 1487872720.9811509,
+        "realtime_factor": 14.87872720981151,
+        "threads": 1,
+        "peak_rss_kib_median": 804,
+        "process_median_ms": 5.794028000309481,
+        "spikes": 20000,
+        "last_spikes": 0,
+        "state_hash": "c5ecc11826562477",
+        "sums": [
+          -519724.7939109802
+        ]
+      }
+    },
+    {
+      "model": "LIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -65.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000,
+      "validation_payload_bytes": 16000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.5618469995170017,
+        "native_compile_ms": 321.97468300000764,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.17770500016922597,
+        "samples_ms": [
+          0.35638299959828146,
+          0.1776689996404457,
+          0.17770500016922597
+        ],
+        "ms_per_timestep": 0.0008885250008461298,
+        "updates_per_second": 1125460734.4168303,
+        "realtime_factor": 112.54607344168302,
+        "threads": 1,
+        "peak_rss_kib_median": 776,
+        "process_median_ms": 2.0880040001429734,
+        "spikes": 2000,
+        "last_spikes": 0,
+        "state_hash": "776027d4367ba962",
+        "sums": [
+          -51974.13510738913
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.17787099932320416,
+        "samples_ms": [
+          0.17787099932320416,
+          0.17760499940777663,
+          0.21151300006749807
+        ],
+        "ms_per_timestep": 0.0008893549966160208,
+        "updates_per_second": 1124410391.5815184,
+        "realtime_factor": 112.44103915815185,
+        "threads": 1,
+        "peak_rss_kib_median": 776,
+        "process_median_ms": 2.8027429998473963,
+        "spikes": 2000,
+        "last_spikes": 0,
+        "state_hash": "776027d4367ba962",
+        "sums": [
+          -51974.13510738913
+        ]
+      }
+    },
+    {
+      "model": "LIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -65.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": -50.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000,
+      "validation_payload_bytes": 160000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.5618469995170017,
+        "native_compile_ms": 321.97468300000764,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2.2755500003768248,
+        "samples_ms": [
+          2.2755500003768248,
+          2.219212999989395,
+          6.220573999598855
+        ],
+        "ms_per_timestep": 0.011377750001884124,
+        "updates_per_second": 878908395.6269058,
+        "realtime_factor": 8.789083956269058,
+        "threads": 1,
+        "peak_rss_kib_median": 844,
+        "process_median_ms": 5.101462000311585,
+        "spikes": 20000,
+        "last_spikes": 0,
+        "state_hash": "bfb5e22679385404",
+        "sums": [
+          -519724.7640172824
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 2.0279169993955293,
+        "samples_ms": [
+          2.0279169993955293,
+          1.728584999909799,
+          2.886784999645897
+        ],
+        "ms_per_timestep": 0.010139584996977646,
+        "updates_per_second": 986233657.7858707,
+        "realtime_factor": 9.862336577858706,
+        "threads": 1,
+        "peak_rss_kib_median": 844,
+        "process_median_ms": 6.373415999405552,
+        "spikes": 20000,
+        "last_spikes": 0,
+        "state_hash": "bfb5e22679385404",
+        "sums": [
+          -519724.7640172824
+        ]
+      }
+    },
+    {
+      "model": "QIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "k": 0.7,
+        "v_rest": -60.0,
+        "v_critical": -40.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": 30.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 4000,
+      "validation_payload_bytes": 8000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 1.135012000304414,
+        "native_compile_ms": 233.88260800038552,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.08758599960856372,
+        "samples_ms": [
+          0.08758599960856372,
+          0.08441299996775342,
+          0.09031599984155037
+        ],
+        "ms_per_timestep": 0.0004379299980428186,
+        "updates_per_second": 2283469971.1578674,
+        "realtime_factor": 228.34699711578676,
+        "threads": 1,
+        "peak_rss_kib_median": 772,
+        "process_median_ms": 1.7386500003340188,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "f0a8c6a65352c70c",
+        "sums": [
+          16476.396018981934
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.08997399982035859,
+        "samples_ms": [
+          0.08729099954507546,
+          0.11778799944295315,
+          0.08997399982035859
+        ],
+        "ms_per_timestep": 0.00044986999910179293,
+        "updates_per_second": 2222864387.482145,
+        "realtime_factor": 222.2864387482145,
+        "threads": 1,
+        "peak_rss_kib_median": 772,
+        "process_median_ms": 1.7459800001233816,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "f0a8c6a65352c70c",
+        "sums": [
+          16476.396018981934
+        ]
+      }
+    },
+    {
+      "model": "QIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "k": 0.7,
+        "v_rest": -60.0,
+        "v_critical": -40.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": 30.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 4,
+      "state_bytes": 40000,
+      "validation_payload_bytes": 80000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 1.135012000304414,
+        "native_compile_ms": 233.88260800038552,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 1.0829229995579226,
+        "samples_ms": [
+          2.4495690004187054,
+          0.9342430003016489,
+          1.0829229995579226
+        ],
+        "ms_per_timestep": 0.005414614997789613,
+        "updates_per_second": 1846853378.1408763,
+        "realtime_factor": 18.468533781408762,
+        "threads": 1,
+        "peak_rss_kib_median": 804,
+        "process_median_ms": 3.1182470002022455,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "44b0a3dbc2900ea3",
+        "sums": [
+          164910.9462070465
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 1.2894419996882789,
+        "samples_ms": [
+          1.317731999733951,
+          1.0760929999378277,
+          1.2894419996882789
+        ],
+        "ms_per_timestep": 0.006447209998441394,
+        "updates_per_second": 1551058520.2618635,
+        "realtime_factor": 15.510585202618634,
+        "threads": 1,
+        "peak_rss_kib_median": 808,
+        "process_median_ms": 3.024148999429599,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "44b0a3dbc2900ea3",
+        "sums": [
+          164910.9462070465
+        ]
+      }
+    },
+    {
+      "model": "QIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "k": 0.7,
+        "v_rest": -60.0,
+        "v_critical": -40.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": 30.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000,
+      "validation_payload_bytes": 16000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.6166510002003633,
+        "native_compile_ms": 262.70367899996927,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 0.19365000025572954,
+        "samples_ms": [
+          0.20016799953737063,
+          0.19360799979040166,
+          0.19365000025572954
+        ],
+        "ms_per_timestep": 0.0009682500012786477,
+        "updates_per_second": 1032791116.6325061,
+        "realtime_factor": 103.27911166325062,
+        "threads": 1,
+        "peak_rss_kib_median": 776,
+        "process_median_ms": 2.242225000372855,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "0e878b139e3d35d6",
+        "sums": [
+          16476.38646205906
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 0.19390400029806187,
+        "samples_ms": [
+          0.22631700085185003,
+          0.19390400029806187,
+          0.19369900019228226
+        ],
+        "ms_per_timestep": 0.0009695200014903094,
+        "updates_per_second": 1031438235.8928521,
+        "realtime_factor": 103.1438235892852,
+        "threads": 1,
+        "peak_rss_kib_median": 776,
+        "process_median_ms": 2.1503739999388927,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "0e878b139e3d35d6",
+        "sums": [
+          16476.38646205906
+        ]
+      }
+    },
+    {
+      "model": "QIF",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "k": 0.7,
+        "v_rest": -60.0,
+        "v_critical": -40.0,
+        "v_init": -65.0,
+        "v_reset": -65.0,
+        "v_threshold": 30.0
+      },
+      "states": [
+        "v"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000,
+      "validation_payload_bytes": 160000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.6166510002003633,
+        "native_compile_ms": 262.70367899996927,
+        "binary_bytes": 21064
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2.4035529995671823,
+        "samples_ms": [
+          2.0374969999465975,
+          2.6881489993684227,
+          2.4035529995671823
+        ],
+        "ms_per_timestep": 0.012017764997835911,
+        "updates_per_second": 832101476.5890946,
+        "realtime_factor": 8.321014765890947,
+        "threads": 1,
+        "peak_rss_kib_median": 848,
+        "process_median_ms": 4.3615849999696366,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "a98a082351fc265e",
+        "sums": [
+          164910.85299567244
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 2.9938640000182204,
+        "samples_ms": [
+          5.636201999550394,
+          2.105599000060465,
+          2.9938640000182204
+        ],
+        "ms_per_timestep": 0.014969320000091102,
+        "updates_per_second": 668033016.8597599,
+        "realtime_factor": 6.680330168597599,
+        "threads": 1,
+        "peak_rss_kib_median": 848,
+        "process_median_ms": 4.903177999949548,
+        "spikes": 0,
+        "last_spikes": 0,
+        "state_hash": "a98a082351fc265e",
+        "sums": [
+          164910.85299567244
+        ]
+      }
+    },
+    {
+      "model": "AdEx",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -70.0,
+        "v_t": -50.0,
+        "delta_t": 2.0,
+        "tau_w": 100.0,
+        "a": 2.0,
+        "b": 40.0,
+        "v_init": -70.0,
+        "w_init": 0.0,
+        "v_reset": -58.0,
+        "v_threshold": 20.0
+      },
+      "states": [
+        "v",
+        "w"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000,
+      "validation_payload_bytes": 16000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 1.808830999834754,
+        "native_compile_ms": 212.44182499958697,
+        "binary_bytes": 21224
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2.0245120003892225,
+        "samples_ms": [
+          2.0245120003892225,
+          3.2826619999468676,
+          1.677442000072915
+        ],
+        "ms_per_timestep": 0.010122560001946113,
+        "updates_per_second": 98789239.06677215,
+        "realtime_factor": 9.878923906677214,
+        "threads": 1,
+        "peak_rss_kib_median": 788,
+        "process_median_ms": 5.595137000454997,
+        "spikes": 1000,
+        "last_spikes": 0,
+        "state_hash": "07e7ec89e0af1a08",
+        "sums": [
+          -49135.05477523804,
+          43470.30905151367
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 1.8044979997284827,
+        "samples_ms": [
+          4.863283999839041,
+          1.8044979997284827,
+          1.776665000761568
+        ],
+        "ms_per_timestep": 0.009022489998642413,
+        "updates_per_second": 110834148.90462245,
+        "realtime_factor": 11.083414890462244,
+        "threads": 1,
+        "peak_rss_kib_median": 792,
+        "process_median_ms": 3.5419069999989006,
+        "spikes": 1000,
+        "last_spikes": 0,
+        "state_hash": "07e7ec89e0af1a08",
+        "sums": [
+          -49135.05477523804,
+          43470.30905151367
+        ]
+      }
+    },
+    {
+      "model": "AdEx",
+      "solver": "euler_simultaneous",
+      "dtype": "f32",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -70.0,
+        "v_t": -50.0,
+        "delta_t": 2.0,
+        "tau_w": 100.0,
+        "a": 2.0,
+        "b": 40.0,
+        "v_init": -70.0,
+        "w_init": 0.0,
+        "v_reset": -58.0,
+        "v_threshold": 20.0
+      },
+      "states": [
+        "v",
+        "w"
+      ],
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000,
+      "validation_payload_bytes": 160000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 1.808830999834754,
+        "native_compile_ms": 212.44182499958697,
+        "binary_bytes": 21224
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 16.858589999174,
+        "samples_ms": [
+          16.285894999782613,
+          20.69579899944074,
+          16.858589999174
+        ],
+        "ms_per_timestep": 0.08429294999587,
+        "updates_per_second": 118633883.38514617,
+        "realtime_factor": 1.1863388338514618,
+        "threads": 1,
+        "peak_rss_kib_median": 860,
+        "process_median_ms": 19.83926499997324,
+        "spikes": 10000,
+        "last_spikes": 0,
+        "state_hash": "e76548fa58b87e47",
+        "sums": [
+          -491336.2477760315,
+          434701.5835609436
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 20.385818000249856,
+        "samples_ms": [
+          21.665170000233047,
+          20.385818000249856,
+          17.50858600007632
+        ],
+        "ms_per_timestep": 0.10192909000124928,
+        "updates_per_second": 98107419.57842885,
+        "realtime_factor": 0.9810741957842886,
+        "threads": 1,
+        "peak_rss_kib_median": 860,
+        "process_median_ms": 22.25384600023972,
+        "spikes": 10000,
+        "last_spikes": 0,
+        "state_hash": "e76548fa58b87e47",
+        "sums": [
+          -491336.2477760315,
+          434701.5835609436
+        ]
+      }
+    },
+    {
+      "model": "AdEx",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 1000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -70.0,
+        "v_t": -50.0,
+        "delta_t": 2.0,
+        "tau_w": 100.0,
+        "a": 2.0,
+        "b": 40.0,
+        "v_init": -70.0,
+        "w_init": 0.0,
+        "v_reset": -58.0,
+        "v_threshold": 20.0
+      },
+      "states": [
+        "v",
+        "w"
+      ],
+      "bytes_per_neuron": 16,
+      "state_bytes": 16000,
+      "validation_payload_bytes": 32000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7662339994567446,
+        "native_compile_ms": 235.47955799949705,
+        "binary_bytes": 21224
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2.4438720001853653,
+        "samples_ms": [
+          4.327132999605965,
+          2.1053860000392888,
+          2.4438720001853653
+        ],
+        "ms_per_timestep": 0.012219360000926827,
+        "updates_per_second": 81837346.63060512,
+        "realtime_factor": 8.183734663060513,
+        "threads": 1,
+        "peak_rss_kib_median": 808,
+        "process_median_ms": 4.108778000045277,
+        "spikes": 1000,
+        "last_spikes": 0,
+        "state_hash": "d3551d01a9e7e5b2",
+        "sums": [
+          -49135.055139554766,
+          43470.30700947622
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 2.062474999547703,
+        "samples_ms": [
+          2.2703650001858477,
+          2.005993000238959,
+          2.062474999547703
+        ],
+        "ms_per_timestep": 0.010312374997738516,
+        "updates_per_second": 96970872.39547612,
+        "realtime_factor": 9.697087239547612,
+        "threads": 1,
+        "peak_rss_kib_median": 804,
+        "process_median_ms": 3.6802019994865987,
+        "spikes": 1000,
+        "last_spikes": 0,
+        "state_hash": "d3551d01a9e7e5b2",
+        "sums": [
+          -49135.055139554766,
+          43470.30700947622
+        ]
+      }
+    },
+    {
+      "model": "AdEx",
+      "solver": "euler_simultaneous",
+      "dtype": "f64",
+      "neurons": 10000,
+      "dt_ms": 0.1,
+      "parameters": {
+        "dt": 0.1,
+        "current": 500.0,
+        "capacitance": 200.0,
+        "g_leak": 10.0,
+        "v_rest": -70.0,
+        "v_t": -50.0,
+        "delta_t": 2.0,
+        "tau_w": 100.0,
+        "a": 2.0,
+        "b": 40.0,
+        "v_init": -70.0,
+        "w_init": 0.0,
+        "v_reset": -58.0,
+        "v_threshold": 20.0
+      },
+      "states": [
+        "v",
+        "w"
+      ],
+      "bytes_per_neuron": 16,
+      "state_bytes": 160000,
+      "validation_payload_bytes": 320000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7662339994567446,
+        "native_compile_ms": 235.47955799949705,
+        "binary_bytes": 21224
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 37.70436000013433,
+        "samples_ms": [
+          37.70436000013433,
+          22.695727000609622,
+          44.76894099934725
+        ],
+        "ms_per_timestep": 0.18852180000067165,
+        "updates_per_second": 53044263.31577766,
+        "realtime_factor": 0.5304426331577766,
+        "threads": 1,
+        "peak_rss_kib_median": 944,
+        "process_median_ms": 41.598564999731025,
+        "spikes": 10000,
+        "last_spikes": 0,
+        "state_hash": "9aaebd5647ae9321",
+        "sums": [
+          -491336.25120235723,
+          434701.56327617366
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 24.606949999906647,
+        "samples_ms": [
+          24.851203999787685,
+          24.606949999906647,
+          22.856048999528866
+        ],
+        "ms_per_timestep": 0.12303474999953323,
+        "updates_per_second": 81277850.36372194,
+        "realtime_factor": 0.8127785036372194,
+        "threads": 1,
+        "peak_rss_kib_median": 948,
+        "process_median_ms": 27.47737700065045,
+        "spikes": 10000,
+        "last_spikes": 0,
+        "state_hash": "9aaebd5647ae9321",
+        "sums": [
+          -491336.25120235723,
+          434701.56327617366
+        ]
+      }
+    },
+    {
+      "model": "HH",
+      "solver": "euler_voltage_rush_larsen_gates",
+      "dtype": "f32",
+      "neurons": 1000,
+      "dt_ms": 0.01,
+      "parameters": {
+        "dt": 0.01,
+        "current": 10.0,
+        "capacitance": 1.0,
+        "g_na": 120.0,
+        "g_k": 36.0,
+        "g_leak": 0.3,
+        "e_na": 50.0,
+        "e_k": -77.0,
+        "e_leak": -54.387,
+        "v_init": -65.0,
+        "v_threshold": 0.0
+      },
+      "states": [
+        "v",
+        "m",
+        "h",
+        "n"
+      ],
+      "bytes_per_neuron": 16,
+      "state_bytes": 16000,
+      "validation_payload_bytes": 32000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.8118080004351214,
+        "native_compile_ms": 261.4765399994212,
+        "binary_bytes": 25496
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 10.582414000054996,
+        "samples_ms": [
+          12.02395299969794,
+          10.582414000054996,
+          9.459705999688595
+        ],
+        "ms_per_timestep": 0.05291207000027498,
+        "updates_per_second": 18899279.502669297,
+        "realtime_factor": 0.18899279502669297,
+        "threads": 1,
+        "peak_rss_kib_median": 824,
+        "process_median_ms": 12.905171000056725,
+        "spikes": 413,
+        "last_spikes": 59,
+        "state_hash": "2c8bc2d45eaa86ca",
+        "sums": [
+          -5485.560067892075,
+          493.83084586262703,
+          416.22452688217163,
+          414.6837867498398
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 10.342891000618692,
+        "samples_ms": [
+          10.176077999858535,
+          12.889104999885603,
+          10.342891000618692
+        ],
+        "ms_per_timestep": 0.05171445500309346,
+        "updates_per_second": 19336953.274286307,
+        "realtime_factor": 0.19336953274286306,
+        "threads": 1,
+        "peak_rss_kib_median": 824,
+        "process_median_ms": 12.240914999892993,
+        "spikes": 413,
+        "last_spikes": 59,
+        "state_hash": "2c8bc2d45eaa86ca",
+        "sums": [
+          -5485.560067892075,
+          493.83084586262703,
+          416.22452688217163,
+          414.6837867498398
+        ]
+      }
+    },
+    {
+      "model": "HH",
+      "solver": "euler_voltage_rush_larsen_gates",
+      "dtype": "f32",
+      "neurons": 10000,
+      "dt_ms": 0.01,
+      "parameters": {
+        "dt": 0.01,
+        "current": 10.0,
+        "capacitance": 1.0,
+        "g_na": 120.0,
+        "g_k": 36.0,
+        "g_leak": 0.3,
+        "e_na": 50.0,
+        "e_k": -77.0,
+        "e_leak": -54.387,
+        "v_init": -65.0,
+        "v_threshold": 0.0
+      },
+      "states": [
+        "v",
+        "m",
+        "h",
+        "n"
+      ],
+      "bytes_per_neuron": 16,
+      "state_bytes": 160000,
+      "validation_payload_bytes": 320000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.8118080004351214,
+        "native_compile_ms": 261.4765399994212,
+        "binary_bytes": 25496
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 115.63545500030159,
+        "samples_ms": [
+          115.63545500030159,
+          125.69070599965926,
+          105.3749129996504
+        ],
+        "ms_per_timestep": 0.578177275001508,
+        "updates_per_second": 17295733.388992015,
+        "realtime_factor": 0.017295733388992016,
+        "threads": 1,
+        "peak_rss_kib_median": 960,
+        "process_median_ms": 120.52233900067222,
+        "spikes": 4120,
+        "last_spikes": 588,
+        "state_hash": "6ab2e5bb6699c3ab",
+        "sums": [
+          -55473.959334373474,
+          4934.305830478668,
+          4162.619136959314,
+          4146.524518966675
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 108.82407000008243,
+        "samples_ms": [
+          105.21896799946262,
+          109.80688299969188,
+          108.82407000008243
+        ],
+        "ms_per_timestep": 0.5441203500004121,
+        "updates_per_second": 18378287.082981598,
+        "realtime_factor": 0.018378287082981597,
+        "threads": 1,
+        "peak_rss_kib_median": 964,
+        "process_median_ms": 112.35444399972039,
+        "spikes": 4120,
+        "last_spikes": 588,
+        "state_hash": "6ab2e5bb6699c3ab",
+        "sums": [
+          -55473.959334373474,
+          4934.305830478668,
+          4162.619136959314,
+          4146.524518966675
+        ]
+      }
+    },
+    {
+      "model": "HH",
+      "solver": "euler_voltage_rush_larsen_gates",
+      "dtype": "f64",
+      "neurons": 1000,
+      "dt_ms": 0.01,
+      "parameters": {
+        "dt": 0.01,
+        "current": 10.0,
+        "capacitance": 1.0,
+        "g_na": 120.0,
+        "g_k": 36.0,
+        "g_leak": 0.3,
+        "e_na": 50.0,
+        "e_k": -77.0,
+        "e_leak": -54.387,
+        "v_init": -65.0,
+        "v_threshold": 0.0
+      },
+      "states": [
+        "v",
+        "m",
+        "h",
+        "n"
+      ],
+      "bytes_per_neuron": 32,
+      "state_bytes": 32000,
+      "validation_payload_bytes": 64000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7244779999382445,
+        "native_compile_ms": 251.1013899993486,
+        "binary_bytes": 25496
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 13.746730999628198,
+        "samples_ms": [
+          13.746730999628198,
+          13.696588999664527,
+          14.573907999874791
+        ],
+        "ms_per_timestep": 0.06873365499814099,
+        "updates_per_second": 14548913.48389732,
+        "realtime_factor": 0.14548913483897322,
+        "threads": 1,
+        "peak_rss_kib_median": 840,
+        "process_median_ms": 15.766017999339965,
+        "spikes": 413,
+        "last_spikes": 59,
+        "state_hash": "7184ea011dc0e18c",
+        "sums": [
+          -5485.545064292809,
+          493.8309229354958,
+          416.2244800417834,
+          414.68373309164383
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 14.130825999927765,
+        "samples_ms": [
+          17.57390399961878,
+          13.306380000358331,
+          14.130825999927765
+        ],
+        "ms_per_timestep": 0.07065412999963883,
+        "updates_per_second": 14153454.299205324,
+        "realtime_factor": 0.14153454299205323,
+        "threads": 1,
+        "peak_rss_kib_median": 840,
+        "process_median_ms": 16.128311999636935,
+        "spikes": 413,
+        "last_spikes": 59,
+        "state_hash": "7184ea011dc0e18c",
+        "sums": [
+          -5485.545064292809,
+          493.8309229354958,
+          416.2244800417834,
+          414.68373309164383
+        ]
+      }
+    },
+    {
+      "model": "HH",
+      "solver": "euler_voltage_rush_larsen_gates",
+      "dtype": "f64",
+      "neurons": 10000,
+      "dt_ms": 0.01,
+      "parameters": {
+        "dt": 0.01,
+        "current": 10.0,
+        "capacitance": 1.0,
+        "g_na": 120.0,
+        "g_k": 36.0,
+        "g_leak": 0.3,
+        "e_na": 50.0,
+        "e_k": -77.0,
+        "e_leak": -54.387,
+        "v_init": -65.0,
+        "v_threshold": 0.0
+      },
+      "states": [
+        "v",
+        "m",
+        "h",
+        "n"
+      ],
+      "bytes_per_neuron": 32,
+      "state_bytes": 320000,
+      "validation_payload_bytes": 640000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "link_libraries": [
+          "m"
+        ],
+        "frontend_ms": 0.7244779999382445,
+        "native_compile_ms": 251.1013899993486,
+        "binary_bytes": 25496
+      },
+      "python_oracle": {
+        "passed": true,
+        "neurons": 17,
+        "steps": 80,
+        "max_abs_error": 0.0,
+        "note": "libm rounding tolerance for states; exact per-step spike count"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 149.56644399990182,
+        "samples_ms": [
+          165.21942899998976,
+          147.76334099951782,
+          149.56644399990182
+        ],
+        "ms_per_timestep": 0.7478322199995091,
+        "updates_per_second": 13371983.357452244,
+        "realtime_factor": 0.013371983357452244,
+        "threads": 1,
+        "peak_rss_kib_median": 1120,
+        "process_median_ms": 152.9661380000107,
+        "spikes": 4120,
+        "last_spikes": 588,
+        "state_hash": "0b8ed27d6f8330e2",
+        "sums": [
+          -55473.81580766984,
+          4934.306554486396,
+          4162.61867871786,
+          4146.523976973295
+        ]
+      },
+      "c": {
+        "kernel_median_ms": 154.55598300013662,
+        "samples_ms": [
+          150.0473800006148,
+          178.30993000006856,
+          154.55598300013662
+        ],
+        "ms_per_timestep": 0.7727799150006831,
+        "updates_per_second": 12940294.909180138,
+        "realtime_factor": 0.012940294909180139,
+        "threads": 1,
+        "peak_rss_kib_median": 1124,
+        "process_median_ms": 159.2638510001052,
+        "spikes": 4120,
+        "last_spikes": 588,
+        "state_hash": "0b8ed27d6f8330e2",
+        "sums": [
+          -55473.81580766984,
+          4934.306554486396,
+          4162.61867871786,
+          4146.523976973295
+        ]
+      }
+    }
+  ],
+  "measurement_context": {
+    "date": "2026-10-05",
+    "core_commit": "d572c202f6e4dd6e435849043e4ba312a10992c6",
+    "cpu_model": "Intel Xeon Platinum 8573C",
+    "cpu_quota": 2,
+    "memory_limit_gib": 8,
+    "environment": "shared cloud; no affinity, thermal control or performance counters",
+    "termux_execution": false,
+    "reference_contract": "matching per-update finite guards for AdEx/HH; independent arithmetic"
+  }
+}

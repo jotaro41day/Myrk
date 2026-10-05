@@ -149,3 +149,49 @@ vetorização e paralelismo dentro do núcleo; tiles grandes podem exceder cache
 Apenas comparação no mesmo hardware/threads/dtype pode justificar uma escolha.
 O tráfego lógico L1 continua 16/32 bytes/update; tiling procura reduzir tráfego
 entre níveis de cache/DRAM, sem afirmar que isso já foi medido por contadores.
+
+## Modelos oficiais IF / LIF / QIF / AdEx / HH
+
+```sh
+python3 -m benchmarks.neuron.models --sizes 1000 10000 --summary --output models.json
+python3 -m benchmarks.neuron.models --models HH --dtype f32 --sizes 100000 --steps 100 --summary
+python3 -m benchmarks.neuron.models --models LIF IF QIF AdEx --dtype f32 --sizes 1000000 --artifacts benchmarks/results/models
+```
+
+This companion lab uses source-parsed native kernels for the other five official
+models; Izhikevich retains the original lab and multicore measurements above.
+All new models currently run one thread. It does not compare different models
+as equivalent work. Parameters and solver appear in every result. HH uses
+Euler voltage / Rush–Larsen gates, dt=.01 ms; the other fixtures use simultaneous
+Euler, dt=.1 ms. Units/contracts: [NEURON_MODELS.md](../../docs/NEURON_MODELS.md).
+No refractory periods, connectivity, delays or hidden monitors.
+
+Each actual neuron has v_init+(i%17)*.125; HH gates are equilibrium at that
+varied initial voltage, AdEx w=w_init. Every state is really updated; the
+fixture is not collapsed to 17 trajectories. Before timing: Python checks 17
+neurons ×80 steps (every field and exact per-step spike count); native independent
+C checks initialization and all states/counts at **every requested timestep
+and scale**. State tolerance vs Python libm is .003 in f32 /1e-9 in f64; C at
+same precision requires exact equality. Every timed sample must match full-state
+hash, sums, total and final count. Failed gates abort without a report; a mutation
+test proves the HH voltage gate rejects a wrong integrator.
+
+Native CLOCK_MONOTONIC measures updates/counts, excludes allocate/init/hash/IO;
+process_ms includes the whole sample. Myrk/C process ordering alternates.
+Default: both precisions, 200 steps, 5 samples, 2 warmups. Memory payload is
+N*number_of_states*dtype_width; --max-mib bounds **two-population validation
+payload**, not total RSS. Native VmHWM reports the measured process separately.
+HH initialization of the Myrk population first uses the production uniform
+initializer, then applies fixture variation; that extra work is outside timing.
+The C reference computes varied initial gates directly. There is no pool cost
+or hidden thread configuration in these single-thread kernels.
+
+State bytes/neuron f32: IF/LIF/QIF4, AdEx8, HH16 (double these for f64).
+Logical loads/stores per update are twice these sizes, before possible uniform
+reloads/spills; this is not measured DRAM bandwidth. libm exp/expm1 are linked
+with -lm, available with ordinary Clang/GCC on Linux/Android. No approximations
+or fast-math. Both production and independent C AdEx/HH check finite states
+inside their update loops, with the same failure contract. These are correct
+starting baselines, not tuned competitive HH kernels.
+`--artifacts` retains generated source/binary/assembly for inspection; keep it
+under ignored benchmarks/results. Android execution of new models is pending.

@@ -87,6 +87,36 @@ class ModelNative(unittest.TestCase):
         continuous=-64.0-math.exp(-0.1*100*10.0/200.0)
         self.assertLess(abs(float(result.stdout)-continuous),0.001)
 
+    def test_lif_matches_original_c_and_python_baselines(self):
+        import os
+        import subprocess
+        import tempfile
+        from pathlib import Path
+        from benchmarks.lif import python_reference
+        neurons,steps=64,200
+        groups=[];declarations=[];body=[];queries=[]
+        for i in range(7):
+            count=(neurons-1-i)//7+1
+            pop=f'p{i}';groups.append(count)
+            declarations.append(declaration('LIF',n=count,dt=0.05,current=1.2+i*0.1,
+                capacitance=1.0,g_leak=1.0,v_rest=0.0,v_init=0.0,v_reset=0.0,v_threshold=1.0).replace(' p:',' '+pop+':'))
+            body.append(f'step({pop}); total=total+spikes({pop});')
+            queries.append(f'for i in 0..{count} {{print(voltage({pop},i));}}')
+        result=native(program(' '.join(declarations)+'var total:i32=0;'+
+            f'for t in 0..{steps} {{'+''.join(body)+'} print(total);'+''.join(queries)))
+        self.assertEqual(result.returncode,0,result.stderr)
+        values=result.stdout.splitlines();actual=int(values[0]),sum(map(float,values[1:]))
+        expected=python_reference(neurons,steps)
+        self.assertEqual(len(values)-1,sum(groups))
+        self.assertEqual(actual[0],expected[0]);self.assertAlmostEqual(actual[1],expected[1],places=8)
+        with tempfile.TemporaryDirectory() as directory:
+            binary=Path(directory)/'lif-reference'
+            subprocess.run([os.environ.get('CC') or 'cc','-std=c11','-O2','-fno-fast-math',
+                '-ffp-contract=off',str(Path(__file__).resolve().parents[1]/'benchmarks/lif_reference.c'),
+                '-o',str(binary)],check=True,capture_output=True,text=True)
+            spikes,checksum=subprocess.check_output([str(binary),str(neurons),str(steps)],text=True).split()
+        self.assertEqual(actual[0],int(spikes));self.assertAlmostEqual(actual[1],float(checksum),places=8)
+
 
 class AdvancedModelTypes(unittest.TestCase):
     def test_models_states_and_solver(self):

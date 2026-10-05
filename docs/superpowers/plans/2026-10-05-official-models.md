@@ -14,6 +14,6 @@ User has authorized autonomous implementation and frequent publication.
 - [x] Write failing AdEx/HH query/rate/trajectory tests.
 - [x] Add exponential adaptation, stable HH rates and Rush–Larsen gates.
 - [x] Verify full suite, add examples/contracts, commit and publish AdEx/HH.
-- [ ] Add independent C reference and correctness-gated model-update benchmark.
-- [ ] Validate all models/dtypes, update README/roadmap/CI/development state.
-- [ ] Run GCC/Clang checks and review; publish final verified increment.
+- [x] Add independent C reference and correctness-gated model-update benchmark.
+- [x] Validate all models/dtypes, update README/roadmap/CI/development state.
+- [x] Run GCC/Clang checks and review; publish final verified increment.

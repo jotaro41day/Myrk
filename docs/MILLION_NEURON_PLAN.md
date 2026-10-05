@@ -99,3 +99,20 @@ estados realmente atualizados. Tile16384/1thread/10M f32: 1929,589 ms,
 mesma sessão. Em 1M não houve ganho relevante. Variância grande e regressões
 com outros tiles: não extrapolar nem misturar essa duração com a tabela inicial.
 Termux, escalas intermediárias com tiles e redes conectadas ainda pendentes.
+
+## Outros modelos oficiais — escalas ainda limitadas a baselines
+
+IF/LIF/QIF/AdEx/HH agora têm kernels f32/f64, exemplo e oráculos. Baselines
+Clang single-thread 1K/10K em PERFORMANCE 0006; nenhum resultado de milhão
+de HH/AdEx é inferido desses baselines. Izhikevich continua o alvo inicial de
+escala/otimização. Novos modelos ainda aguardam execução Android/multicore.
+
+| Modelo | Estados | bytes/neuron f32 / f64 | RAM estado 1M f32 MiB | RAM estado 10M f32 MiB | Escala realmente medida |
+| --- | --- | ---: | ---: | ---: | --- |
+| IF/LIF/QIF | v | 4 / 8 | 3.815 | 38.147 | 1K/10K, x86 |
+| AdEx | v/w | 8 / 16 | 7.629 | 76.294 | 1K/10K, x86 |
+| HH | v/m/h/n | 16 / 32 | 15.259 | 152.588 | 1K/10K, x86 |
+
+RAM é só payload teórico, sem sinapses, spikes, monitores, runtime/allocator.
+HH usa unidades por cm² e dt=.01 ms no fixture; point models dt=.1 ms.
+Não comparar throughput entre modelos como se calculassem a mesma dinâmica.

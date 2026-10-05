@@ -86,6 +86,7 @@ python3 -m unittest discover -s tests -v
 python3 benchmarks/run.py
 python3 -m benchmarks.lif
 python3 -m benchmarks.neuron.izhikevich --sizes 1000 10000 100000 1000000
+python3 -m benchmarks.neuron.models --sizes 1000 --summary
 ```
 
 O benchmark inicial compara o mesmo laço `i32` com um baseline C compilado
@@ -96,9 +97,23 @@ ainda não compila esse modelo. Metodologia e resultados
 estão em [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 
 
-## Izhikevich nativo
+## Modelos neurais nativos
 
 Os modelos oficiais, parâmetros e solvers estão em [NEURON_MODELS.md](docs/NEURON_MODELS.md).
+
+```sh
+myrk run examples/if.myrk
+myrk run examples/lif.myrk
+myrk run examples/qif.myrk
+myrk run examples/adex.myrk
+myrk run examples/hh.myrk
+```
+
+O laboratório `benchmarks.neuron.models` cobre os cinco modelos novos, com
+referências C independentes e oráculos Python. Atualmente esses kernels são
+single-thread; o laboratório especializado Izhikevich preserva os modos
+batch/multicore. São baselines corretos, sem promessa de precisão científica
+para qualquer dt ou de desempenho igual entre modelos/solvers.
 
 ```sh
 myrk run examples/vector.myrk
