@@ -58,9 +58,10 @@ Files: parser.py, semantics.py, codegen_c.py, tests, examples, docs, CI.
 
 ### Task 4: Development continuity
 
-- [ ] Update language specification, README, changelog, roadmap and saved state.
-- [ ] Record remaining general-language milestones as GitHub issues.
-- [ ] Review final diff, verify remote SHA and CI, report only proven features.
+- [x] Update language specification, README, changelog, roadmap and saved state.
+- [x] Record remaining general-language milestones as GitHub issues #8–#12 / #2.
+- [x] Review final diff; code commits published with exact verified SHAs.
+  CI 37354518564 passed on 438c67c; final continuity commit is documentation only.
 
 ## Evidence and rulings
 
@@ -80,3 +81,5 @@ Files: parser.py, semantics.py, codegen_c.py, tests, examples, docs, CI.
 - Ruling: reserve numeric cast names and len only, document the 0.x break;
   bool/unit remain legal function names because neither is callable builtin.
 - Focused independent review found the three cases above; fixes were verified.
+- Installed examples outside checkout and README native snippets passed. SNN
+  benchmark smokes checked all states/spikes against references; no speed claim.

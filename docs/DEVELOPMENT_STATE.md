@@ -93,6 +93,19 @@ não bloquear desenvolvimento por isso.
 
 ## Próximos incrementos
 
+Frente geral: G0 concluído em d9bb29e/d97adb3/438c67c. CI 37354518564
+passou em 438c67c com GCC/Clang, 110 testes, exemplos e benchmark smokes.
+Os três exemplos novos também executaram após instalação fora do checkout;
+os dois snippets Myrk do README foram compilados/executados. Benchmarks pequenos
+Izhikevich (17/1000, f32, 2 threads, tile7) e todos os outros modelos (17)
+mantiveram gates C/Python. Tile7 é caso de corretude, não recomendação de
+desempenho. Sem ganho de performance atribuído à expansão geral.
+Issues #8 módulos, #9 strings, #10 structs/enums/match, #11 inteiros/bitwise,
+#12 biblioteca/tooling registram o restante, junto ao #2 de views/empréstimos.
+Não afirmar que essas funcionalidades futuras já existem. A próxima fatia geral
+recomendada é strings imutáveis/print textual, seguida de módulos; cada uma
+precisa de ADR, testes e exemplos sem substituir o pipeline ou a IR neural.
+
 1. [#4](https://github.com/jotaro41day/Myrk/issues/4): validar novo caminho e
    benchmarks 1K→1M no Termux, depois aumentar se a memória permitir.
 2. [#6](https://github.com/jotaro41day/Myrk/issues/6): baseline de bandwidth,

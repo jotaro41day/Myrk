@@ -38,12 +38,12 @@ Não representa uma reescrita ou a promessa de que todos os recursos já existem
 | Etapa | Entrega | Estado / gate |
 | --- | --- | --- |
 | G0 | Inferência local, comentários de bloco, expoentes, if/else/while, break/continue, lógica curta, funções unit, casts, atribuições compostas, buffers escalares e len | Implementado; testes nativos/ownership/diagnósticos; Android pendente |
-| G1 | Módulos/imports com resolução determinística e strings UTF-8 imutáveis; impressão textual | Futuro; especificar ciclos, caminhos e ownership antes de implementar |
-| G2 | Structs/enums, construtores, acesso a campos, match, aliases de tipo | Futuro; layout/valor/ABI explícitos, exhaustividade e diagnósticos |
-| G3 | i8/i16/i64/u8/u16/u32/u64 e operadores bitwise | Futuro; wrap, shifts, casts, limites e ABI devem ter contrato testado |
-| G4 | Views/borrowing de buffers entre funções, arrays estáticos, slices, coleções dinâmicas | Futuro; lifetime/aliasing/limites sem GC no hot path |
-| G5 | Biblioteca padrão: matemática, RNG reproduzível, arquivos, argumentos CLI, erros/resultados e tempo | Futuro; efeitos/custos explícitos e operações portáveis Termux |
-| G6 | FFI C, módulos compilados, formatter, myrk test/bench, tooling e pacotes | Futuro; builds reproduzíveis, símbolos/ABI e testes de instalação |
+| G1 | Módulos/imports com resolução determinística e strings UTF-8 imutáveis; impressão textual | Futuro; [#8](https://github.com/jotaro41day/Myrk/issues/8) módulos, [#9](https://github.com/jotaro41day/Myrk/issues/9) strings |
+| G2 | Structs/enums, construtores, acesso a campos, match, aliases de tipo | Futuro; [#10](https://github.com/jotaro41day/Myrk/issues/10), layout/valor/ABI explícitos, exhaustividade e diagnósticos |
+| G3 | i8/i16/i64/u8/u16/u32/u64 e operadores bitwise | Futuro; [#11](https://github.com/jotaro41day/Myrk/issues/11), wrap, shifts, casts, limites e ABI testados |
+| G4 | Views/borrowing de buffers entre funções, arrays estáticos, slices, coleções dinâmicas | Futuro; [#2](https://github.com/jotaro41day/Myrk/issues/2), lifetime/aliasing/limites sem GC no hot path |
+| G5 | Biblioteca padrão: matemática, RNG reproduzível, arquivos, argumentos CLI, erros/resultados e tempo | Futuro; [#12](https://github.com/jotaro41day/Myrk/issues/12), efeitos/custos explícitos e operações Termux |
+| G6 | FFI C, módulos compilados, formatter, myrk test/bench, tooling e pacotes | Futuro; [#12](https://github.com/jotaro41day/Myrk/issues/12), builds reproduzíveis, símbolos/ABI e instalação |
 
 Toda etapa precisa de programas executáveis, testes, documentação e benchmark
 quando alterar runtime ou layout. Recursos genéricos não apagam PopulationSpec,
