@@ -1,6 +1,6 @@
 # Million neuron plan
 
-Atualizado em 2026-10-04. Meta: milhões de neurônios viáveis em hardware
+Atualizado em 2026-10-05. Meta: milhões de neurônios viáveis em hardware
 limitado, com precisão e trabalho explícitos. **Não é uma rede completa**.
 
 ## Neuron update: Izhikevich
@@ -89,3 +89,13 @@ bucket/delay. Reconstrução só ganha se custo computacional compensar tráfego
 As tabelas iniciais acima continuam sendo resultados históricos single-thread
 com 100 passos. Não misturar durações/custos. O pool ainda não foi medido no
 Android. Ver experimento 0004 em PERFORMANCE e raw JSON pool-1/pool-2/pool-4.
+
+## Cache blocking (ablação, sem escolha automática)
+
+Experimento 0005 em PERFORMANCE: 1M/10M f32/f64, tiles0/2048/16384, 2 threads,
+100 passos; repetição f32/1thread/200 passos. Erro vs C da mesma precisão=0;
+estados realmente atualizados. Tile16384/1thread/10M f32: 1929,589 ms,
+1036,5 M updates/s, realtime 0,052×, RSS 76,93 MiB; ~11% sobre step da
+mesma sessão. Em 1M não houve ganho relevante. Variância grande e regressões
+com outros tiles: não extrapolar nem misturar essa duração com a tabela inicial.
+Termux, escalas intermediárias com tiles e redes conectadas ainda pendentes.

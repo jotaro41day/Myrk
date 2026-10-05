@@ -1,0 +1,426 @@
+{
+  "category": "neuron_update",
+  "model": "Izhikevich",
+  "solver": "euler_simultaneous",
+  "threshold": "after integration >=30; reset v=c, u=u_next+d",
+  "dt_ms": 0.5,
+  "current": 10.0,
+  "threads": 2,
+  "tile": 0,
+  "schedule": "batch",
+  "mode": "strict; no FMA contraction",
+  "hardware": {
+    "machine": "x86_64",
+    "system": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3
+  },
+  "compiler": "Debian clang version 19.1.7 (3+b1)",
+  "repeat": 3,
+  "warmup": 1,
+  "steps": 100,
+  "precision_comparison": {
+    "neurons": 97,
+    "steps": 100,
+    "max_trajectory_abs_v": 0.0067308338832461345,
+    "max_trajectory_abs_u": 2.66951918064251e-05,
+    "spike_neuron_step_mismatches": 0,
+    "spikes_f32": 194,
+    "spikes_f64": 194,
+    "note": "Precision sensitivity for this case; not solver convergence or scientific validation"
+  },
+  "results": [
+    {
+      "neurons": 1000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 8000000,
+      "validation_payload_bytes": 16000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "frontend_ms": 0.7702779998908227,
+        "native_compile_ms": 378.5252560001027,
+        "binary_bytes": 30408
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step count; batch prefixes 1/2/7/31/80"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 83.88310400005139,
+        "samples_ms": [
+          83.88310400005139,
+          45.006187000126374,
+          91.59988800001884
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.17101999992519268,
+        "ms_per_timestep": 0.8388310400005139,
+        "updates_per_second": 1192135188.51113,
+        "realtime_factor": 0.5960675942555651,
+        "peak_rss_kib_median": 8556,
+        "process_median_ms": 109.98682299987195,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794722.83686829,
+        "sum_u": -4406651.433073759,
+        "state_hash": "5256cd2b83f83d79",
+        "effective_state_gb_s": 19.07416301617808
+      },
+      "c": {
+        "kernel_median_ms": 98.81251599972529,
+        "samples_ms": [
+          116.08141099986824,
+          92.71563799984506,
+          98.81251599972529
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.16712299975552014,
+        "ms_per_timestep": 0.9881251599972529,
+        "updates_per_second": 1012017546.4439951,
+        "realtime_factor": 0.5060087732219976,
+        "peak_rss_kib_median": 8552,
+        "process_median_ms": 118.10685499995088,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794722.83686829,
+        "sum_u": -4406651.433073759,
+        "state_hash": "5256cd2b83f83d79"
+      },
+      "myrk_step": {
+        "kernel_median_ms": 97.6525349997246,
+        "samples_ms": [
+          105.14621399988755,
+          91.54402700005448,
+          97.6525349997246
+        ],
+        "threads": 1,
+        "tile": 0,
+        "pool_startup_median_ms": 7.700009518885054e-05,
+        "ms_per_timestep": 0.9765253499972459,
+        "updates_per_second": 1024038956.0832397,
+        "realtime_factor": 0.5120194780416198,
+        "peak_rss_kib_median": 8456,
+        "process_median_ms": 119.87059700004465,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794722.83686829,
+        "sum_u": -4406651.433073759,
+        "state_hash": "5256cd2b83f83d79"
+      },
+      "speedup_vs_single_thread_step": 1.1641502322048642
+    },
+    {
+      "neurons": 10000000,
+      "dtype": "f32",
+      "bytes_per_neuron": 8,
+      "state_bytes": 80000000,
+      "validation_payload_bytes": 160000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "frontend_ms": 0.7702779998908227,
+        "native_compile_ms": 378.5252560001027,
+        "binary_bytes": 30408
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step count; batch prefixes 1/2/7/31/80"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 1044.1955390001567,
+        "samples_ms": [
+          1016.9000519999827,
+          1136.988515000212,
+          1044.1955390001567
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.3403330001674476,
+        "ms_per_timestep": 10.441955390001567,
+        "updates_per_second": 957675035.6140431,
+        "realtime_factor": 0.04788375178070216,
+        "peak_rss_kib_median": 78864,
+        "process_median_ms": 1298.084055000345,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947523.1015472,
+        "sum_u": -44066344.698498964,
+        "state_hash": "4e119d18b3f0410d",
+        "effective_state_gb_s": 15.32280056982469
+      },
+      "c": {
+        "kernel_median_ms": 1119.164426000225,
+        "samples_ms": [
+          1243.3174189995952,
+          1119.164426000225,
+          886.9143329998224
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.3297060002296348,
+        "ms_per_timestep": 11.19164426000225,
+        "updates_per_second": 893523754.6585482,
+        "realtime_factor": 0.04467618773292742,
+        "peak_rss_kib_median": 78864,
+        "process_median_ms": 1316.3100299998405,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947523.1015472,
+        "sum_u": -44066344.698498964,
+        "state_hash": "4e119d18b3f0410d"
+      },
+      "myrk_step": {
+        "kernel_median_ms": 1098.1575630003135,
+        "samples_ms": [
+          1089.701395999782,
+          1379.87332900002,
+          1098.1575630003135
+        ],
+        "threads": 1,
+        "tile": 0,
+        "pool_startup_median_ms": 7.899961929069832e-05,
+        "ms_per_timestep": 10.981575630003135,
+        "updates_per_second": 910616138.9699545,
+        "realtime_factor": 0.045530806948497725,
+        "peak_rss_kib_median": 78772,
+        "process_median_ms": 1329.095389000031,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947523.1015472,
+        "sum_u": -44066344.698498964,
+        "state_hash": "4e119d18b3f0410d"
+      },
+      "speedup_vs_single_thread_step": 1.051678083256156
+    },
+    {
+      "neurons": 1000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 16000000,
+      "validation_payload_bytes": 32000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "frontend_ms": 0.5229309999776888,
+        "native_compile_ms": 387.2140930002388,
+        "binary_bytes": 30408
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step count; batch prefixes 1/2/7/31/80"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 99.43406399997912,
+        "samples_ms": [
+          109.43863900001816,
+          99.43406399997912,
+          95.92334099988875
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.34994299994650646,
+        "ms_per_timestep": 0.9943406399997912,
+        "updates_per_second": 1005691570.6474695,
+        "realtime_factor": 0.5028457853237348,
+        "peak_rss_kib_median": 16372,
+        "process_median_ms": 143.2204540001294,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794724.3146691,
+        "sum_u": -4406645.350943031,
+        "state_hash": "4a7d59f8b0bcd668",
+        "effective_state_gb_s": 32.18213026071903
+      },
+      "c": {
+        "kernel_median_ms": 109.65340400025525,
+        "samples_ms": [
+          96.95123400024386,
+          109.65340400025525,
+          192.7165160000186
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.2550859999246313,
+        "ms_per_timestep": 1.0965340400025525,
+        "updates_per_second": 911964392.8223808,
+        "realtime_factor": 0.4559821964111904,
+        "peak_rss_kib_median": 16368,
+        "process_median_ms": 148.9934319997701,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794724.3146691,
+        "sum_u": -4406645.350943031,
+        "state_hash": "4a7d59f8b0bcd668"
+      },
+      "myrk_step": {
+        "kernel_median_ms": 201.61074499992537,
+        "samples_ms": [
+          201.61074499992537,
+          221.75097199988159,
+          201.5149889998611
+        ],
+        "threads": 1,
+        "tile": 0,
+        "pool_startup_median_ms": 5.600031727226451e-05,
+        "ms_per_timestep": 2.0161074499992537,
+        "updates_per_second": 496005309.6378222,
+        "realtime_factor": 0.24800265481891112,
+        "peak_rss_kib_median": 16272,
+        "process_median_ms": 244.44654300032198,
+        "spikes": 2000000,
+        "last_spikes": 0,
+        "sum_v": -69794724.3146691,
+        "sum_u": -4406645.350943031,
+        "state_hash": "4a7d59f8b0bcd668"
+      },
+      "speedup_vs_single_thread_step": 2.027582267983814
+    },
+    {
+      "neurons": 10000000,
+      "dtype": "f64",
+      "bytes_per_neuron": 16,
+      "state_bytes": 160000000,
+      "validation_payload_bytes": 320000000,
+      "status": "measured",
+      "compilation": {
+        "flags": [
+          "-std=c11",
+          "-O2",
+          "-fwrapv",
+          "-fno-fast-math",
+          "-ffp-contract=off",
+          "-pthread"
+        ],
+        "frontend_ms": 0.5229309999776888,
+        "native_compile_ms": 387.2140930002388,
+        "binary_bytes": 30408
+      },
+      "python_oracle": {
+        "neurons": 17,
+        "steps": 80,
+        "passed": true,
+        "comparison": "every state and per-step count; batch prefixes 1/2/7/31/80"
+      },
+      "validation": {
+        "passed": true,
+        "max_abs_error": 0
+      },
+      "myrk": {
+        "kernel_median_ms": 2166.783021000356,
+        "samples_ms": [
+          1511.408246999963,
+          2216.4749739999934,
+          2166.783021000356
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.2129389999936393,
+        "ms_per_timestep": 21.667830210003558,
+        "updates_per_second": 461513677.3308857,
+        "realtime_factor": 0.023075683866544287,
+        "peak_rss_kib_median": 156992,
+        "process_median_ms": 2569.7466599999643,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947537.892701,
+        "sum_u": -44066283.876275666,
+        "state_hash": "fc7c4b294edfe2f0",
+        "effective_state_gb_s": 14.768437674588343
+      },
+      "c": {
+        "kernel_median_ms": 1303.1048980001287,
+        "samples_ms": [
+          1303.1048980001287,
+          1501.6699899997548,
+          1294.3844010001158
+        ],
+        "threads": 2,
+        "tile": 0,
+        "pool_startup_median_ms": 0.25048699990293244,
+        "ms_per_timestep": 13.031048980001287,
+        "updates_per_second": 767397929.0037948,
+        "realtime_factor": 0.03836989645018974,
+        "peak_rss_kib_median": 156996,
+        "process_median_ms": 1712.733513999865,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947537.892701,
+        "sum_u": -44066283.876275666,
+        "state_hash": "fc7c4b294edfe2f0"
+      },
+      "myrk_step": {
+        "kernel_median_ms": 2596.9978320003975,
+        "samples_ms": [
+          2562.5022730000637,
+          2641.0888180002985,
+          2596.9978320003975
+        ],
+        "threads": 1,
+        "tile": 0,
+        "pool_startup_median_ms": 6.599975677090697e-05,
+        "ms_per_timestep": 25.969978320003975,
+        "updates_per_second": 385060005.70271057,
+        "realtime_factor": 0.01925300028513553,
+        "peak_rss_kib_median": 156900,
+        "process_median_ms": 2985.1334199997837,
+        "spikes": 20000000,
+        "last_spikes": 0,
+        "sum_v": -697947537.892701,
+        "sum_u": -44066283.876275666,
+        "state_hash": "fc7c4b294edfe2f0"
+      },
+      "speedup_vs_single_thread_step": 1.1985500194668413
+    }
+  ],
+  "measurement_context": {
+    "date": "2026-10-05",
+    "source_commit": "7530954e84b4737eb5c0f5a79162cd0599a52e00",
+    "cpu_model": "Intel Xeon Platinum 8573C",
+    "cpu_quota": 2,
+    "memory_limit_gib": 8,
+    "environment": "shared cloud; no affinity or performance counters; high sample variability",
+    "termux_execution": false
+  }
+}

@@ -261,3 +261,102 @@ não atribuímos essa medição ao pool nem inferimos ganho Android a partir del
 Decisão: manter pool opcional, default uma thread e fallback original;
 publicar comparação 1/2/4 com JSON e resumo curto. Medir no Termux antes de
 selecionar número de threads/afinidade ou agendamento para big.LITTLE.
+
+## Experimento 0005 — cache blocking temporal explícito
+Hipótese: a independência comprovada no ADR 0003 permite trocar a ordem de
+blocos e timesteps. Avançar um bloco por todos os passos pode reutilizar v/u
+em cache e diminuir tráfego entre cache/DRAM, mantendo todas as atualizações.
+Não é skip-ahead, agrupamento dos 97 estados repetidos ou mudança de precisão.
+
+Mudança: `MYRK_TILE` / `--tile` limita neurônios por bloco dentro de cada
+partição. `0` continua default e mantém o caminho existente. Cada bloco retorna
+total e último count; o último count da população é a soma dos últimos counts
+**de todos os blocos**, não apenas do último bloco. Configuração lida no thread
+de controle e copiada para o job. Não há armazenamento ou alocação adicionais
+proporcionais a N. C de referência usa o mesmo blocking e recursos.
+
+Gate: C sequencial continua conferindo todo estado/count por timestep; o lote
+com blocos é conferido contra o estado final, total e último count. Gates Python,
+prefixos, hashes e ambos dtypes permanecem. Testes incluem tile1, tiles ímpares,
+tails, blocos maiores que partição, chamadas repetidas e mais workers que
+neurônios. Um teste com todos os 19 neurônios disparando em cada passo rejeitou
+explicitamente a mutação `last += chunk_last` para `last = chunk_last`.
+51 testes passaram em GCC14.2 e Clang19.1.7; revisão independente não encontrou
+defeitos na mudança de blocking/contagens.
+
+Medição: código 7530954, 2026-10-05, Xeon Platinum 8573C, Clang19.1.7 O2,
+modo estrito sem FMA, dt=.5 ms, cloud compartilhada com quota de 2 CPUs e
+limite de 8 GiB. Sem afinidade, controle térmico ou contadores. Os sweeps são
+sequenciais, nunca concorrentes. Há **forte variação**; preservar toda amostra
+é essencial. Estes números não foram executados em Android.
+
+Primeiro sweep: 2 threads, 100 passos, 1 warmup, 3 amostras por variante;
+Myrk/C/antigo alternam ordem. Tempos abaixo são do kernel em ms.
+
+| N | dtype | tile | Myrk mediana | faixa Myrk | C mesmos recursos |
+| ---: | --- | ---: | ---: | ---: | ---: |
+| 1,000,000 | f32 | 0 | 83.883 | 45.006–91.600 | 98.813 |
+| 10,000,000 | f32 | 0 | 1044.196 | 1016.900–1136.989 | 1119.164 |
+| 1,000,000 | f64 | 0 | 99.434 | 95.923–109.439 | 109.653 |
+| 10,000,000 | f64 | 0 | 2166.783 | 1511.408–2216.475 | 1303.105 |
+| 1,000,000 | f32 | 2048 | 87.789 | 86.479–101.448 | 103.509 |
+| 10,000,000 | f32 | 2048 | 990.433 | 892.858–1286.241 | 1011.815 |
+| 1,000,000 | f64 | 2048 | 273.539 | 167.510–318.345 | 350.711 |
+| 10,000,000 | f64 | 2048 | 2135.280 | 1000.808–2579.556 | 2032.633 |
+| 1,000,000 | f32 | 16384 | 59.188 | 47.856–84.885 | 52.891 |
+| 10,000,000 | f32 | 16384 | 926.323 | 517.265–954.206 | 945.912 |
+| 1,000,000 | f64 | 16384 | 99.115 | 96.810–101.622 | 99.062 |
+| 10,000,000 | f64 | 16384 | 1884.119 | 1002.092–1934.815 | 1935.808 |
+
+Repetição para separar blocking de multicore: **uma thread**, f32, 200 passos,
+2 warmups e 5 amostras. `antigo` é o Myrk step original da mesma sessão,
+sem blocos; C usa o mesmo tile da variante Myrk.
+
+| N | tile | Myrk ms | faixa Myrk | C ms | antigo ms | ganho vs antigo |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1,000,000 | 0 | 202.847 | 186.542–316.091 | 202.742 | 228.062 | 1.12× |
+| 10,000,000 | 0 | 2139.846 | 2055.506–2296.989 | 2210.987 | 2016.921 | 0.94× |
+| 1,000,000 | 16384 | 192.689 | 175.124–225.102 | 178.683 | 193.868 | 1.01× |
+| 10,000,000 | 16384 | 1929.589 | 1882.122–2074.091 | 1925.379 | 2149.604 | 1.11× |
+
+Assembly: callback com blocos cross-compilado para aarch64-linux-android24
+continua com NEON f32 `.4s`, width4/interleave2, compare/select e sem FMA.
+Saves/restores no prólogo/epílogo não são spills do loop interno. No x86 f64,
+Clang mantém SSE2 width2/interleave2; há reload de um parâmetro uniforme da
+pilha no loop, evidência de pressão de registradores. Não atribuir a regressão
+inteira a esse reload sem isolamento/contadores. AArch64 tem mais registradores
+vetoriais, e cross compilation não é medição Android.
+
+Tráfego lógico continua 16 B/update f32, 32 B f64; cache blocking muda a possível
+origem/destino físico desse tráfego. Working set por bloco: tile*8 B f32,
+tile*16 B f64 (2048: 16/32 KiB; 16384: 128/256 KiB). Sem arrays extras,
+sem compressão de estado; RSS no JSON continua incluindo o processo todo.
+
+Decisão: **não escolher tile automaticamente**. Tile2048 teve regressões
+fortes em f64; tile16384 deu ganho pequeno em 10M f32 single-thread (~11%
+sobre o antigo contemporâneo), quase nenhum em 1M. Ruído e sobreposição de
+faixas impedem concluir ganho robusto/universal. Manter como opção experimental
+para ablação no hardware real; nenhuma alegação de aceleração grande ou liderança.
+O ganho multicore anterior de ~1,98× continua sendo um experimento separado.
+
+Reprodução (usar Clang19.1.7 para reproduzir a toolchain, ou medir o Clang real
+no dispositivo; não misturar hosts):
+
+```sh
+for tile in 0 2048 16384; do
+  CC=clang python3 -m benchmarks.neuron.izhikevich --sizes 1000000 10000000 \
+    --steps 100 --repeat 3 --warmup 1 --threads 2 --tile "$tile" \
+    --summary --output "tile-two-$tile.json"
+done
+for tile in 0 16384; do
+  CC=clang python3 -m benchmarks.neuron.izhikevich --sizes 1000000 10000000 \
+    --dtype f32 --steps 200 --repeat 5 --warmup 2 --threads 1 --tile "$tile" \
+    --summary --output "tile-one-$tile.json"
+done
+```
+
+Raw JSON: [2 threads / tile0](measurements/2026-10-05-tile-two-threads-0.json),
+[tile2048](measurements/2026-10-05-tile-two-threads-2048.json),
+[tile16384](measurements/2026-10-05-tile-two-threads-16384.json),
+[1 thread / tile0](measurements/2026-10-05-tile-one-thread-0.json),
+[tile16384](measurements/2026-10-05-tile-one-thread-16384.json).

@@ -15,7 +15,7 @@ a workload/target deve permanecer condicionado, sem fast-math implícita.
 | M2 | Buffers locais contíguos f32/f64, limites e ownership por escopo | Implementado/testado Linux; Android novo código pendente; empréstimos entre funções futuros |
 | M3 | Population/UniformParameter na IR, Izhikevich Euler explícito, oráculos C/Python, trajetórias e spikes | Implementado/testado Linux; exemplo nativo; validação Android pendente |
 | M4 | Lab 1K→10M, memória, throughput, timestep, realtime, estados e precisão | Sweep CPU x86 realizado; tabela no MILLION_NEURON_PLAN; Termux pendente |
-| M5 | Layout SoA/AoSoA, especialização e NEON/SIMD | SoA baseline; assembly AArch64 confirma autovetorização Clang; escolher mudanças após medições reais no celular |
+| M5 | Layout SoA/AoSoA, especialização e NEON/SIMD | SoA baseline; NEON no cross compile; cache blocking temporal explícito medido em x86, sem valor automático. Ablação Termux pendente |
 | M6 | SpikeSet: máscara, bitset, compactação | Medir atividade/custo de conversão; equivalência e throughput de compactação |
 | M7 | Pool persistente, partições contíguas, redução ao final | Implementado para batches independentes; ~1,98× f32 com 2 threads no Xeon. Android/big.LITTLE e redes conectadas pendentes |
 | M8 | Sinapses reais: CSR, índices menores, propagação | Eventos/s, bytes/sinapse, oracle de conectividade; comparar formatos/ordens e conectividade procedural |

@@ -12,7 +12,8 @@ questões de desempenho levantadas pelo [AresY](https://github.com/Jotaroofdioin
 e mutáveis (`var`), laços `for` de faixa exclusiva, aritmética, comparações,
 `print` e `return`. Há buffers contíguos locais f32/f64 com índices verificados. Há populações Izhikevich f32/f64 (Euler simultâneo, SoA, parâmetros uniformes).
 Loops de populações independentes podem usar um pool CPU persistente via
-`MYRK_THREADS`. Ainda não há redes conectadas, tensores ou SIMD manual. Não há alegação de vantagem de desempenho.
+`MYRK_THREADS` e blocos de cache experimentais explícitos via `MYRK_TILE`.
+Ainda não há redes conectadas, tensores ou SIMD manual. Não há alegação de vantagem de desempenho.
 
 ## Começar
 
@@ -100,6 +101,19 @@ myrk run examples/vector.myrk
 MYRK_THREADS=4 myrk run examples/izhikevich.myrk
 python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 --threads 4 --summary --output izh-4.json
 ```
+
+Para comparar cache blocking no próprio dispositivo, mantendo os mesmos recursos:
+
+```sh
+for tile in 0 2048 16384; do
+  python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 \
+    --threads 2 --tile "$tile" --summary --output "izh-tile-$tile.json"
+done
+```
+
+O padrão é `MYRK_TILE=0`. Só use um tamanho positivo após medir; blocos pequenos
+podem piorar desempenho. `MYRK_THREADS=2 MYRK_TILE=16384 myrk run examples/izhikevich.myrk`
+ativa essa configuração para loops elegíveis sem observação intermediária.
 
 Populações usam dois buffers contíguos, parâmetros uniformes e Euler simultâneo
 com dt explícito. `step`, `spikes`, `voltage` e `recovery` são operações da

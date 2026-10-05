@@ -1,6 +1,6 @@
 # Estado para retomar o desenvolvimento
 
-Atualizado em 2026-10-04. Continuar **este repositório**; não reinicializar,
+Atualizado em 2026-10-05. Continuar **este repositório**; não reinicializar,
 criar fork/projeto novo ou repetir o bootstrap. Nome: Myrk. Repositório:
 https://github.com/jotaro41day/Myrk. Versão 0.1.0 experimental, adições em
 Unreleased. O usuário pediu commit e publicação frequentes de cada incremento
@@ -20,7 +20,7 @@ validado para preservar o progresso se a sessão terminar.
   Laboratório compara todos os estados e spikes antes de reportar desempenho.
 - Sweep 1K/10K/100K/1M/2M/5M/10M f32/f64 em Xeon, GCC O2/O3 e Clang O2.
   Dados preservados em docs/measurements, resumo em PERFORMANCE/MILLION_NEURON_PLAN.
-- 47 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
+- 51 testes passam localmente com GCC 14.2 e Clang 19.1.7; exemplos buffers/SNN
   passaram com ASan/UBSan. CI Linux passa; matriz GCC/Clang verifica ambos.
 - Revisão corrigiu duplo arredondamento de parâmetros f32: preservar decimal
   original no C, limites exatos com Fraction. Não reintroduzir conversão via f64.
@@ -37,6 +37,15 @@ comparar Myrk/C com mesmos recursos e o Myrk antigo single-thread.
 1,98× sobre a variante antiga medida na mesma sessão. 4 threads não ganharam
 sobre 2 no host com quota de 2 CPUs. Estado/hash/spikes idênticos, sem fast-math.
 ThreadSanitizer no exemplo passou. Android do pool ainda precisa de teste.
+
+Cache blocking temporal explícito: MYRK_TILE / --tile, default 0, dentro das
+partições independentes. Todos os estados, total/último spikes preservados.
+Sweeps 0/2048/16384 com 2 threads e repetição 0/16384 com 1 thread em 1M/10M;
+experimento 0005 e raw JSON datado 2026-10-05. Há ruído grande e regressões
+com tile2048 f64. Tile16384/1thread/10M f32 ~11% sobre step da mesma sessão;
+1M praticamente empatado. Não promover valor automático nem alegar ganho
+Android. O callback mantém NEON no cross compile. Próximo gate é ablação no
+Termux, não repetir instalação/bootstrap/pesquisa já existentes.
 
 ## Evidência e limites
 

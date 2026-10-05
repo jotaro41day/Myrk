@@ -9,6 +9,19 @@ from test_population import declaration
 
 
 class BatchCompilerTests(unittest.TestCase):
+    def test_tiled_last_count_includes_every_block(self):
+        # Every neuron fires every step, including short tiles and empty workers.
+        for dtype in ['f32','f64']:
+            source=program(declaration(dtype,n=19,a=0.0,b=0.0,c=0.0,d=0.0,
+                                       dt=1.0,current=-110.0)+'''var total:i32=0;
+                for t in 0..13 {step(p); total=total+spikes(p);}
+                print(total); print(spikes(p));''')
+            for threads,tile in [(1,7),(4,3),(32,2)]:
+                with self.subTest(dtype=dtype,threads=threads,tile=tile), patch.dict(
+                        os.environ,{'MYRK_THREADS':str(threads),'MYRK_TILE':str(tile)}):
+                    result=native(source)
+                    self.assertEqual((result.returncode,result.stdout),(0,'247\n19\n'),result.stderr)
+
     def test_invalid_tile_is_rejected(self):
         for value in ['-1','2147483648','none','7x']:
             with self.subTest(value=value), patch.dict(os.environ,{'MYRK_THREADS':'1','MYRK_TILE':value}):

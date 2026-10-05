@@ -48,3 +48,14 @@ Este passe só é válido para o modelo independente atual. Adicionar corrente
 por timestep, sinapses, delays, callbacks, monitores ou alias exige estender a
 prova de dependências antes de permitir batching. Nunca aplicá-lo a uma rede
 conectada apenas porque seu modelo neuronal é Izhikevich.
+
+## Extension — 2026-10-05
+
+`MYRK_TILE` subdivide explicitamente cada partição em blocos temporais; default
+0 preserva a partição inteira. A mesma prova permite avançar cada bloco pelos
+timesteps: somente estados privados e soma inteira são reordenados. Total e
+último count precisam incluir todos os blocos; não há stream intermediário.
+O probe tile256 anterior não justificava um valor global; agora há ablação
+0/2048/16384 no experimento 0005. Ganhos modestos/ruído e regressões impedem
+promover configuração automática. Mantém-se uma opção experimental para medir
+cache menor no Android, sem intrinsics SIMD ou mudança de solver/precisão.
