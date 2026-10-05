@@ -7,6 +7,14 @@ def batch_populations(module):
     def block(body):
         result=[]
         for item in body:
+            if item.op == 'if':
+                condition,yes,no=item.args
+                result.append(replace(item,args=(condition,block(yes),block(no))))
+                continue
+            if item.op == 'while':
+                condition,children=item.args
+                result.append(replace(item,args=(condition,block(children))))
+                continue
             if item.op != 'for':
                 result.append(item)
                 continue

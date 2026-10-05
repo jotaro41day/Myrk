@@ -2,8 +2,9 @@ from .lexer import MyrkError, Token, lex
 from .syntax import Expr, Function, Stmt
 
 
-PRECEDENCE = {"==": 1, "!=": 1, "<": 1, "<=": 1, ">": 1, ">=": 1,
-              "+": 2, "-": 2, "*": 3, "/": 3, "%": 3}
+PRECEDENCE = {"||": 1, "&&": 2, "==": 3, "!=": 3,
+              "<": 4, "<=": 4, ">": 4, ">=": 4,
+              "+": 5, "-": 5, "*": 6, "/": 6, "%": 6}
 
 
 class Parser:
@@ -69,6 +70,20 @@ class Parser:
         if token.kind != "ident":
             raise MyrkError(token.pos, "expected a statement")
         self.index += 1
+        if token.text == "if":
+            condition = self.expression()
+            body = self.block()
+            otherwise = ()
+            if self.current.text == "else":
+                self.index += 1
+                otherwise = (self.statement(),) if self.current.text == "if" else self.block()
+            return Stmt("if", token.pos, args=(condition, body, otherwise))
+        if token.text == "while":
+            condition = self.expression()
+            return Stmt("while", token.pos, args=(condition, self.block()))
+        if token.text in ("break", "continue"):
+            self.take(";")
+            return Stmt(token.text, token.pos)
         if token.text == "population":
             name = self.name()
             self.take(":")
@@ -165,7 +180,7 @@ class Parser:
             else:
                 left = Expr("name", token.pos, token.text)
         elif token.kind in ("-", "!"):
-            left = Expr("unary", token.pos, token.kind, (self.expression(4),))
+            left = Expr("unary", token.pos, token.kind, (self.expression(7),))
         elif token.kind == "(":
             left = self.expression()
             self.take(")")

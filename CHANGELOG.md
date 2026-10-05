@@ -9,6 +9,10 @@
 
 ## Unreleased
 
+- Condições if/else if/else, while, break/continue com liberação por escopo,
+  operadores &&/|| com curto-circuito e análise de retorno em todos os caminhos.
+- Breaking (experimental): comparações ordenadas passam a ter precedência maior
+  que igualdade, em vez de compartilhar o mesmo nível. Use parênteses para fixar a ordem.
 - Inferência local pelo tipo exato do inicializador, comentários de bloco aninhados,
   literais científicos e sufixos f32/f64 em literais inteiros.
 - Modelos nativos IF, LIF e QIF em f32/f64; catálogo semântico e estados SoA específicos, referências e exemplos. Batching permanece restrito ao Izhikevich.

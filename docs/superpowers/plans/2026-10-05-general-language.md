@@ -40,11 +40,11 @@ Files: lexer.py, parser.py, semantics.py, tests/test_language.py, LANGUAGE.md.
 
 Files: parser.py, semantics.py, codegen_c.py, optimize.py, test_language.py.
 
-- [ ] Add failing tests for branches, while, nested break/continue, bool-only
+- [x] Add failing tests for branches, while, nested break/continue, bool-only
   conditions, all-path returns, scope cleanup and lazy &&/||.
-- [ ] Implement structured IR and C lowering, loop scope cleanup and recursive
+- [x] Implement structured IR and C lowering, loop scope cleanup and recursive
   neural discovery/optimization.
-- [ ] Run regressions and native sanitizers; document and publish.
+- [x] Run regressions and native sanitizers; document and publish.
 
 ### Task 3: Functions and numeric ergonomics
 

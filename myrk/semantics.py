@@ -11,6 +11,11 @@ TYPES = {"i32", "f32", "f64", "bool"}
 NUMERIC = {"i32", "f32", "f64"}
 
 
+def float_literal_text(text):
+    text = text.removesuffix("f32").removesuffix("f64")
+    return text if any(c in text for c in ".eE") else text + ".0"
+
+
 @dataclass(frozen=True)
 class Symbol:
     dtype: str
@@ -27,6 +32,7 @@ class Checker:
         self.next_symbol = 0
         self.scopes = []
         self.result = ""
+        self.loop_depth = 0
 
     def type_name(self, name: str, pos: Pos) -> str:
         if name not in TYPES:
@@ -65,10 +71,15 @@ class Checker:
                 symbol = self.add_symbol(name, dtype, False, pos)
                 params.append((symbol.cname, dtype))
             body = self.block(function.body, nested=False)
-            if not body or body[-1].op != "return":
-                raise MyrkError(function.pos, f"function {function.name!r} must end with return")
+            if not self.returns(body):
+                raise MyrkError(function.pos, f"function {function.name!r} must return on all paths")
             procedures.append(Procedure(function.name, tuple(params), function.result, body))
         return Module(tuple(procedures))
+
+    def returns(self, body):
+        return any(item.op == "return" or
+                   (item.op == "if" and self.returns(item.args[1]) and self.returns(item.args[2]))
+                   for item in body)
 
     def block(self, statements: tuple[Stmt, ...], nested: bool = True) -> tuple[Instruction, ...]:
         if nested:
@@ -84,6 +95,23 @@ class Checker:
 
     def statement(self, statement: Stmt) -> Instruction:
         op = statement.kind
+        if op == "if":
+            condition = self.expression(statement.args[0])
+            self.require(condition, "bool", condition.pos)
+            body = self.block(statement.args[1])
+            otherwise = self.block(statement.args[2])
+            return Instruction(op, statement.pos, args=(condition, body, otherwise))
+        if op == "while":
+            condition = self.expression(statement.args[0])
+            self.require(condition, "bool", condition.pos)
+            self.loop_depth += 1
+            body = self.block(statement.args[1])
+            self.loop_depth -= 1
+            return Instruction(op, statement.pos, args=(condition, body))
+        if op in ("break", "continue"):
+            if not self.loop_depth:
+                raise MyrkError(statement.pos, f"'{op}' is only valid inside a loop")
+            return Instruction(op, statement.pos)
         if op == "population":
             name, model, dtype = statement.value
             canonical = canonical_model(model)
@@ -163,7 +191,9 @@ class Checker:
             self.require(end, "i32", statement.pos)
             self.scopes.append({})
             index = self.add_symbol(statement.value, "i32", False, statement.pos)
+            self.loop_depth += 1
             body = self.block(statement.args[2], nested=False)
+            self.loop_depth -= 1
             self.scopes.pop()
             return Instruction(op, statement.pos, index.cname, (start, end, body))
         raise AssertionError(op)
@@ -189,7 +219,7 @@ class Checker:
             sign, literal = -1, expr.args[0]
         if literal.kind != "float":
             raise MyrkError(expr.pos, "uniform parameter currently requires a floating literal")
-        text = ("-" if sign < 0 else "") + literal.value.removesuffix("f32").removesuffix("f64")
+        text = ("-" if sign < 0 else "") + float_literal_text(literal.value)
         number = Fraction(text)
         # Exact round-to-nearest overflow midpoint; avoid decimal -> f64 -> f32.
         overflow = 2**128 - 2**103 if dtype == "f32" else 2**1024 - 2**970
@@ -209,10 +239,7 @@ class Checker:
         if expr.kind == "float":
             text = expr.value
             dtype = "f32" if text.endswith("f32") else "f64"
-            text = text.removesuffix("f32").removesuffix("f64")
-            if not any(c in text for c in ".eE"):
-                text += ".0"
-            return Value("constant", dtype, expr.pos, text)
+            return Value("constant", dtype, expr.pos, float_literal_text(text))
         if expr.kind == "bool":
             return Value("constant", "bool", expr.pos, expr.value)
         if expr.kind == "name":
@@ -260,6 +287,9 @@ class Checker:
             if left.dtype != right.dtype:
                 raise MyrkError(expr.pos, f"type mismatch: {left.dtype} and {right.dtype}")
             operator = expr.value
+            if operator in ("&&", "||"):
+                self.require(left, "bool", expr.pos)
+                return Value("logical", "bool", expr.pos, operator, (left, right))
             if operator in ("+", "-", "*", "/") and left.dtype not in NUMERIC:
                 raise MyrkError(expr.pos, f"'{operator}' requires numbers")
             if operator == "%" and left.dtype != "i32":

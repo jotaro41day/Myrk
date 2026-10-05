@@ -17,14 +17,23 @@
   nomes desconhecidos, tipos incompatíveis e duplicatas são erros.
 - `for i in start..end` avalia limites uma vez e percorre o intervalo
   semiaberto `[start, end)`. Os limites e o índice são `i32`; o índice é imutável.
+- `if condição { ... } else if condição { ... } else { ... }` e
+  `while condição { ... }` exigem bool. O while reavalia a condição a cada
+  iteração. `break;` encerra o laço mais interno; `continue;` passa à próxima
+  iteração (incluindo incremento do for ou reavaliação do while).
+- `&&` e `||` usam curto-circuito: o lado direito só executa quando necessário.
+  Precedência, da menor à maior: `||`, `&&`, `== !=`, `< <= > >=`, `+ -`,
+  `* / %`, unários `! -`. Parênteses escolhem outra ordem.
+- Funções escalares devem retornar em todos os caminhos. Um if/else com
+  retorno em ambos os ramos satisfaz essa regra; um laço sozinho não satisfaz.
 - Chamadas usam assinaturas declaradas e aceitam funções definidas depois da
   chamada. `print` aceita um escalar e adiciona uma quebra de linha.
 - Subexpressões e argumentos de chamadas são avaliados da esquerda para a
   direita. O backend materializa valores intermediários para preservar a ordem.
 - O compilador informa arquivo, linha e coluna nos erros de sintaxe e tipos.
-  O runtime só informa a categoria da falha de divisão.
+  O runtime informa a categoria da falha, sem localização de fonte ainda.
 
-Não há ainda módulos, imports, strings, threads ou tensores. Os programas são compilados AOT para C11 e depois para um
+Não há ainda módulos, imports, strings, threads gerais ou tensores. Os programas são compilados AOT para C11 e depois para um
 executável nativo por um compilador C externo.
 
 ## Buffers locais
@@ -34,7 +43,9 @@ zerados. n é i32 e avaliado uma vez. `x[i]` lê e `x[i] = valor;` escreve.
 Índice i32 fora de `[0,n)`, tamanho negativo ou falha de alocação encerram
 com código 70. Um buffer vazio é válido. O índice é avaliado/verificado antes
 do valor a armazenar. Buffers são liberados no fim do escopo, inclusive em
-retornos antecipados; não podem ser copiados, passados ou retornados ainda.
+retornos antecipados, break e continue. Saídas de laço liberam apenas recursos
+dos escopos abandonados; buffers externos continuam válidos. Buffers não podem
+ser copiados, passados ou retornados ainda.
 Veja `examples/vector.myrk` (resultado 2048).
 
 ## Populações Izhikevich

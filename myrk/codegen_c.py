@@ -14,6 +14,7 @@ class CGenerator:
         self.next_loop = 0
         self.next_temp = 0
         self.resources = []
+        self.loop_scopes = []
 
     def cleanup(self, resources, indent):
         return [f"{'    ' * indent}free({name});" for name in reversed(resources)]
@@ -70,6 +71,17 @@ class CGenerator:
             lines, arg = self.value(item.args[0], indent)
             assignment, name = self.temporary(item.dtype, f"({item.data}{arg})", indent)
             return lines + [assignment], name
+        if item.op == "logical":
+            lines, left = self.value(item.args[0], indent)
+            assignment, result = self.temporary("bool", left, indent)
+            lines.append(assignment)
+            pad = "    " * indent
+            condition = result if item.data == "&&" else f"!{result}"
+            lines.append(f"{pad}if ({condition}) {{")
+            right_lines, right = self.value(item.args[1], indent + 1)
+            lines.extend(right_lines)
+            lines.extend([f"{pad}    {result} = {right};", f"{pad}}}"])
+            return lines, result
         if item.op == "binary":
             left_lines, left = self.value(item.args[0], indent)
             left_assignment, left = self.temporary(item.args[0].dtype, left, indent)
@@ -87,6 +99,29 @@ class CGenerator:
 
     def statement(self, item: Instruction, indent: int) -> list[str]:
         pad = "    " * indent
+        if item.op == "if":
+            condition, body, otherwise = item.args
+            lines, value = self.value(condition, indent)
+            lines.append(f"{pad}if ({value}) {{")
+            lines.extend(self.block(body, indent + 1))
+            if otherwise:
+                lines.append(f"{pad}}} else {{")
+                lines.extend(self.block(otherwise, indent + 1))
+            lines.append(f"{pad}}}")
+            return lines
+        if item.op == "while":
+            lines = [f"{pad}while (true) {{"]
+            condition_lines, condition = self.value(item.args[0], indent + 1)
+            lines.extend(condition_lines)
+            lines.append(f"{pad}    if (!({condition})) break;")
+            self.loop_scopes.append(len(self.resources))
+            lines.extend(self.block(item.args[1], indent + 1))
+            self.loop_scopes.pop()
+            lines.append(f"{pad}}}")
+            return lines
+        if item.op in ("break", "continue"):
+            resources = [name for scope in self.resources[self.loop_scopes[-1]:] for name in scope]
+            return self.cleanup(resources, indent) + [f"{pad}{item.op};"]
         if item.op == "advance":
             name, dtype, accumulator = item.data
             start_lines, start = self.value(item.args[0], indent + 1)
@@ -182,7 +217,9 @@ class CGenerator:
                      f"{pad}    int32_t myrk_end_{loop_id} = {end_value};",
                      f"{pad}    for (int32_t {item.data} = myrk_start_{loop_id}; "
                      f"{item.data} < myrk_end_{loop_id}; ++{item.data}) {{"]
+            self.loop_scopes.append(len(self.resources))
             lines.extend(self.block(body, indent + 2))
+            self.loop_scopes.pop()
             lines.extend((f"{pad}    }}", f"{pad}}}"))
             return lines
         raise AssertionError(item.op)
@@ -225,6 +262,11 @@ class CGenerator:
                     yield item.data.model, item.data.precision
                 elif item.op == "for":
                     yield from precisions(item.args[2])
+                elif item.op == "if":
+                    yield from precisions(item.args[1])
+                    yield from precisions(item.args[2])
+                elif item.op == "while":
+                    yield from precisions(item.args[1])
         neural_types = sorted({dtype for p in module.procedures for dtype in precisions(p.body)})
         if neural_types:
             lines.append(PTHREAD_RUNTIME)
