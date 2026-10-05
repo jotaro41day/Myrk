@@ -128,3 +128,24 @@ O runtime do compilador reutiliza o mesmo pool entre lotes; testes cobrem isso.
 A ordem das três variantes gira a cada repetição. No schedule step, usa duas
 variantes. Os arquivos JSON preservam amostras e comparações; --summary apenas
 reduz a impressão no terminal, sem remover os gates de corretude.
+
+## Ablação de cache blocks
+
+`--tile 0` preserva a partição inteira; `--tile 2048` avança grupos menores por
+todos os passos, sem criar threads/barreiras por timestep. Os dois dtypes e o
+C de referência usam exatamente o mesmo tile. `myrk_step` continua sendo o
+baseline original de uma thread, sem tile; o JSON informa as duas configurações.
+
+```sh
+for tile in 0 2048 16384; do
+  python3 -m benchmarks.neuron.izhikevich --sizes 1000000 --dtype f32 \
+    --threads 2 --tile "$tile" --summary --output "izh-tile-$tile.json"
+done
+```
+
+Para programa compilado: `MYRK_THREADS=2 MYRK_TILE=2048 myrk run examples/izhikevich.myrk`.
+Nenhum valor positivo é automaticamente escolhido. Tiles muito pequenos reduzem
+vetorização e paralelismo dentro do núcleo; tiles grandes podem exceder cache.
+Apenas comparação no mesmo hardware/threads/dtype pode justificar uma escolha.
+O tráfego lógico L1 continua 16/32 bytes/update; tiling procura reduzir tráfego
+entre níveis de cache/DRAM, sem afirmar que isso já foi medido por contadores.

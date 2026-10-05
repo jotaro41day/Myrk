@@ -28,8 +28,8 @@ def source(dtype, n=17):
 }}'''
 
 
-def checked(command, threads=None):
-    env=None if threads is None else {**os.environ,'MYRK_THREADS':str(threads)}
+def checked(command, threads=None, tile=0):
+    env=None if threads is None else {**os.environ,'MYRK_THREADS':str(threads),'MYRK_TILE':str(tile)}
     result = subprocess.run([str(x) for x in command],text=True,capture_output=True,env=env)
     if result.returncode:
         raise RuntimeError(f'command failed ({result.returncode}): {result.stderr.strip()}')
@@ -59,9 +59,9 @@ def build_driver(directory, dtype, cc, opt, schedule='batch'):
                        binary_bytes=binary.stat().st_size)
 
 
-def oracle_gate(binary,dtype,threads=1):
+def oracle_gate(binary,dtype,threads=1,tile=0):
     n,steps=17,80
-    rows=checked([binary,'trace','myrk',n,steps],threads).splitlines()
+    rows=checked([binary,'trace','myrk',n,steps],threads,tile).splitlines()
     if len(rows)!=steps:
         raise RuntimeError('wrong oracle trace length')
     r=rounding(dtype)
@@ -79,7 +79,7 @@ def oracle_gate(binary,dtype,threads=1):
         if int(fields[0])!=spikes:
             raise RuntimeError('Python oracle spike mismatch')
     for prefix in (1,2,7,31,80):
-        checked([binary,'validate','myrk',n,prefix],threads)
+        checked([binary,'validate','myrk',n,prefix],threads,tile)
     return dict(neurons=n,steps=steps,passed=True,comparison='every state and per-step count; batch prefixes 1/2/7/31/80')
 
 
@@ -102,7 +102,7 @@ def precision_comparison(steps):
                 note='Precision sensitivity for this case; not solver convergence or scientific validation')
 
 
-def measure(binary,n,steps,repeat,warmup,expected,threads=1,schedule='batch'):
+def measure(binary,n,steps,repeat,warmup,expected,threads=1,schedule='batch',tile=0):
     names=('myrk','c','myrk_step') if schedule=='batch' else ('myrk','c')
     samples={k:[] for k in names}
     # Alternate order to reduce fixed ordering bias; each process starts from identical state.
@@ -111,7 +111,7 @@ def measure(binary,n,steps,repeat,warmup,expected,threads=1,schedule='batch'):
         order=names[offset:]+names[:offset]
         for backend in order:
             started=time.perf_counter()
-            row=json.loads(checked([binary,'run',backend,n,steps],threads))
+            row=json.loads(checked([binary,'run',backend,n,steps],threads,tile))
             row['process_seconds']=time.perf_counter()-started
             for key in ('spikes','state_hash','sum_v','sum_u','last_spikes'):
                 if row[key]!=expected[key]:
@@ -125,7 +125,7 @@ def measure(binary,n,steps,repeat,warmup,expected,threads=1,schedule='batch'):
         seconds=[r['seconds'] for r in rows];median=statistics.median(seconds)
         rss=[r['peak_rss_kib'] for r in rows if r['peak_rss_kib']>=0]
         result[backend]=dict(kernel_median_ms=median*1000,samples_ms=[s*1000 for s in seconds],
-            threads=rows[0]['threads'],
+            threads=rows[0]['threads'],tile=rows[0]['tile'],
             pool_startup_median_ms=statistics.median(r['pool_startup_ms'] for r in rows),
             ms_per_timestep=median*1000/steps,updates_per_second=n*steps/median,
             realtime_factor=steps*0.0005/median,
@@ -148,6 +148,7 @@ def main(argv=None):
                         help='maximum validation array payload (two complete populations), not total RSS')
     parser.add_argument('--opt',choices=['O2','O3'],default='O2')
     parser.add_argument('--threads',type=int,default=1)
+    parser.add_argument('--tile',type=int,default=0,help='neurons per cache block; 0 uses full thread partition')
     parser.add_argument('--schedule',choices=['batch','step'],default='batch')
     parser.add_argument('--summary',action='store_true',help='print compact results instead of raw JSON')
     parser.add_argument('--output',type=Path,help='also save the complete JSON report')
@@ -160,12 +161,14 @@ def main(argv=None):
         parser.error('repeat/max-mib must be positive; warmup must be nonnegative')
     if not 1<=args.threads<=64 or (args.schedule=='step' and args.threads!=1):
         parser.error('threads must be 1..64; step schedule is single-thread only')
+    if not 0<=args.tile<=2147483647 or (args.schedule=='step' and args.tile):
+        parser.error('tile must be 0..2147483647; step schedule requires tile=0')
     cc=os.environ.get('CC') or shutil.which('clang') or shutil.which('cc')
     if not cc: parser.error('install clang or set CC')
     try:
         report=dict(category='neuron_update',model='Izhikevich',solver='euler_simultaneous',
             threshold='after integration >=30; reset v=c, u=u_next+d',dt_ms=0.5,
-            current=10.0,threads=args.threads,schedule=args.schedule,mode='strict; no FMA contraction',
+            current=10.0,threads=args.threads,tile=args.tile,schedule=args.schedule,mode='strict; no FMA contraction',
             hardware=dict(machine=platform.machine(),system=platform.platform(),
                           cpu_count=os.cpu_count()),compiler=checked([cc,'--version']).splitlines()[0],
             repeat=args.repeat,warmup=args.warmup,steps=args.steps,
@@ -175,17 +178,17 @@ def main(argv=None):
             directory.mkdir(parents=True,exist_ok=True)
             for dtype in (['f32','f64'] if args.dtype=='both' else [args.dtype]):
                 binary,compilation=build_driver(directory,dtype,cc,args.opt,args.schedule)
-                oracle=oracle_gate(binary,dtype,args.threads)
+                oracle=oracle_gate(binary,dtype,args.threads,args.tile)
                 width=4 if dtype=='f32' else 8
                 for n in args.sizes:
                     row=dict(neurons=n,dtype=dtype,bytes_per_neuron=2*width,
                              state_bytes=n*2*width,validation_payload_bytes=n*4*width)
                     if n*4*width>args.max_mib*1024*1024:
                         row['status']='skipped_memory_budget';report['results'].append(row);continue
-                    validation=json.loads(checked([binary,'validate','myrk',n,args.steps],args.threads))
+                    validation=json.loads(checked([binary,'validate','myrk',n,args.steps],args.threads,args.tile))
                     row.update(status='measured',compilation=compilation,python_oracle=oracle,
                                validation={k:validation[k] for k in ('passed','max_abs_error')},
-                               **measure(binary,n,args.steps,args.repeat,args.warmup,validation,args.threads,args.schedule))
+                               **measure(binary,n,args.steps,args.repeat,args.warmup,validation,args.threads,args.schedule,args.tile))
                     if args.schedule=='batch':
                         row['speedup_vs_single_thread_step']=row['myrk_step']['kernel_median_ms']/row['myrk']['kernel_median_ms']
                     row['myrk']['effective_state_gb_s']=n*4*width*args.steps/(row['myrk']['kernel_median_ms']/1000)/1e9
@@ -195,7 +198,7 @@ def main(argv=None):
                 args.output.write_text(serialized+'\n',encoding='utf-8')
             if args.summary:
                 print('Independent Izhikevich neuron updates (no synapses); strict numerics')
-                print(f'{report["compiler"]}; schedule={args.schedule}; dt=0.5 ms')
+                print(f'{report["compiler"]}; schedule={args.schedule}; tile={args.tile}; dt=0.5 ms')
                 print('N dtype threads Myrk_ms C_ms old_step_ms M_updates/s speedup_vs_old_step')
                 for row in report['results']:
                     if row['status']!='measured':

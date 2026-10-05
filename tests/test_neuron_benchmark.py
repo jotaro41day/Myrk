@@ -10,6 +10,18 @@ import unittest
 
 @unittest.skipUnless(shutil.which('cc') or shutil.which('clang'), 'C compiler required')
 class NeuronBenchmarkTests(unittest.TestCase):
+    def test_tiled_schedule_preserves_all_states_both_dtypes(self):
+        result=self.run_bench('--sizes','1031','--steps','80','--repeat','1',
+            '--warmup','0','--threads','4','--tile','7')
+        self.assertEqual(result.returncode,0,result.stderr)
+        report=json.loads(result.stdout)
+        self.assertEqual(report['tile'],7)
+        for row in report['results']:
+            self.assertEqual(row['myrk']['tile'],7)
+            self.assertEqual(row['c']['tile'],7)
+            self.assertEqual(row['myrk_step']['tile'],0)
+            self.assertEqual(row['myrk']['state_hash'],row['myrk_step']['state_hash'])
+
     def test_summary_keeps_full_json_report(self):
         with tempfile.TemporaryDirectory() as directory:
             output=Path(directory)/'report.json'

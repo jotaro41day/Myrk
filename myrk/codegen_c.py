@@ -95,7 +95,7 @@ class CGenerator:
             lines += end_lines + [assignment]
             count = f"({end} > {start} ? (uint32_t)((int64_t){end} - {start}) : 0)"
             call = f"myrk_izh_{dtype}_advance(&{name}, {count})"
-            lines.append(f"{pad}    if ({end} > {start} && myrk_cpu_threads() > 1) {{")
+            lines.append(f"{pad}    if ({end} > {start} && (myrk_cpu_threads() > 1 || myrk_cpu_tile() > 0)) {{")
             if accumulator:
                 lines.append(f"{pad}        {accumulator} = (int32_t)((uint32_t){accumulator} + (uint32_t){call});")
             else:

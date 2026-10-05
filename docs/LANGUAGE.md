@@ -71,3 +71,11 @@ Programas nativos também aceitam MYRK_THREADS. Flags C incluem `-pthread`;
 Clang/GCC e pthread em Linux/Android são suficientes, sem OpenMP/CUDA.
 Mais threads podem piorar execução pequena ou aquecimento em celulares.
 Esta transformação não é válida automaticamente para futuras redes conectadas.
+
+`MYRK_TILE=2048` limita cada bloco de um lote a 2048 neurônios. Cada bloco
+executa todos os passos antes do próximo, reutilizando estado em cache; todo
+neurônio ainda é integrado exatamente uma vez por passo. Default `0` usa a
+partição inteira. É uma opção experimental explícita, não uma escolha automática
+para todo hardware. Funciona também com uma thread e não afeta loops observados.
+Valores válidos: 0..2147483647; inválidos produzem runtime error 70 ao usar o
+caminho elegível. Total e contagem do último passo incluem todos os blocos.

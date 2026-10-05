@@ -33,6 +33,7 @@ static int32_t update(int reference, int32_t n, REAL *v, REAL *u) {
 typedef struct {
     POPULATION p;
     uint32_t steps;
+    int32_t tile;
     uint64_t totals[MYRK_MAX_THREADS];
     int32_t last[MYRK_MAX_THREADS];
 } reference_batch;
@@ -42,9 +43,16 @@ static void reference_partition(int id, int width, void *context) {
     int32_t begin=(int32_t)((int64_t)p.size*id/width);
     int32_t end=(int32_t)((int64_t)p.size*(id+1)/width);
     uint64_t total=0; int32_t last=0;
-    for (uint32_t t=0;t<batch->steps;++t) {
-        last=reference_step(end-begin,p.v+begin,p.u+begin,p.a,p.b,p.c,p.d,p.dt,p.current);
-        total+=(uint64_t)last;
+    for (int32_t base=begin;base<end;) {
+        int32_t count=end-base;
+        if (batch->tile && batch->tile<count) count=batch->tile;
+        int32_t chunk_last=0;
+        for (uint32_t t=0;t<batch->steps;++t) {
+            chunk_last=reference_step(count,p.v+base,p.u+base,p.a,p.b,p.c,p.d,p.dt,p.current);
+            total+=(uint64_t)chunk_last;
+        }
+        last+=chunk_last;
+        base+=count;
     }
     batch->totals[id]=total; batch->last[id]=last;
 }
@@ -52,7 +60,7 @@ static uint64_t advance(int reference, int32_t n, REAL *v, REAL *u, uint32_t ste
     POPULATION p={.size=n,.v=v,.u=u,.a=A,.b=B,.c=C,.d=D,.dt=DT,.current=INPUT};
     uint64_t total=0;
     if (reference) {
-        if (myrk_cpu_threads()==1) {
+        if (myrk_cpu_threads()==1 && !myrk_cpu_tile()) {
             for(uint32_t t=0;t<steps;++t) {
                 p.spikes=reference_step(n,v,u,A,B,C,D,DT,INPUT);
                 total+=(uint64_t)p.spikes;
@@ -60,7 +68,7 @@ static uint64_t advance(int reference, int32_t n, REAL *v, REAL *u, uint32_t ste
             *last=p.spikes;
             return total;
         }
-        reference_batch batch={.p=p,.steps=steps};
+        reference_batch batch={.p=p,.steps=steps,.tile=myrk_cpu_tile()};
         myrk_parallel(reference_partition,&batch);
         for(int i=0;i<myrk_cpu_threads();++i) {
             total+=batch.totals[i]; p.spikes+=batch.last[i];
@@ -116,9 +124,10 @@ int main(int argc, char **argv) {
     int32_t last=0;
     double pool_start=now();
     int threads=batch ? myrk_cpu_threads() : 1;
+    int32_t tile=batch ? myrk_cpu_tile() : 0;
     double pool_startup_ms=(now()-pool_start)*1000.0;
     const double start=now();
-    if (batch && threads > 1 && !trace && !validate) {
+    if (batch && (threads > 1 || tile > 0) && !trace && !validate) {
         spikes=advance(reference,n,v,u,(uint32_t)steps,&last);
     } else for (int32_t t=0;t<steps;++t) {
         const int32_t fired=update(reference,n,v,u);
@@ -163,9 +172,9 @@ int main(int argc, char **argv) {
         }
         printf("{\"seconds\":%.17g,\"spikes\":%" PRIu64 ",\"sum_v\":%.17g,\"sum_u\":%.17g,"
                "\"state_hash\":\"%016" PRIx64 "\",\"peak_rss_kib\":%ld,"
-               "\"threads\":%d,\"pool_startup_ms\":%.17g,\"last_spikes\":%d,"
+               "\"threads\":%d,\"tile\":%d,\"pool_startup_ms\":%.17g,\"last_spikes\":%d,"
                "\"max_abs_error\":0,\"passed\":true}\n",
-               seconds,spikes,sum_v,sum_u,hash_state(n,v,u),peak_rss_kib(),threads,pool_startup_ms,last);
+               seconds,spikes,sum_v,sum_u,hash_state(n,v,u),peak_rss_kib(),threads,tile,pool_startup_ms,last);
     }
     free(vr);free(ur);free(v);free(u);
     return 0;

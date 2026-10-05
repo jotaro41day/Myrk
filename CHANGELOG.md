@@ -17,3 +17,4 @@
 - Correção de duplo arredondamento em parâmetros f32.
 - CI Linux com matriz GCC/Clang; testes nativos respeitam CC. Estado de retomada em docs/DEVELOPMENT_STATE.md.
 - Batching conservador de loops Izhikevich sem observação intermediária; pool pthread persistente, MYRK_THREADS explícito e benchmark com comparação ao caminho sequencial.
+- Cache blocking temporal explícito via MYRK_TILE / --tile, com gate de todos os estados e contagens; padrão sem blocos preservado.

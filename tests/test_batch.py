@@ -9,6 +9,29 @@ from test_population import declaration
 
 
 class BatchCompilerTests(unittest.TestCase):
+    def test_invalid_tile_is_rejected(self):
+        for value in ['-1','2147483648','none','7x']:
+            with self.subTest(value=value), patch.dict(os.environ,{'MYRK_THREADS':'1','MYRK_TILE':value}):
+                result=native(program(declaration()+'for t in 0..2 {step(p);}'))
+                self.assertEqual(result.returncode,70)
+                self.assertIn('MYRK_TILE',result.stderr)
+
+    def test_tiled_batches_match_untiled_with_repeated_calls(self):
+        for dtype in ['f32','f64']:
+            source=program(declaration(dtype,n=1031)+'''var total:i32=0;
+                for batch in 0..3 {
+                    for t in 0..80 {step(p); total=total+spikes(p);}
+                    print(spikes(p)); print(voltage(p,1030)); print(recovery(p,0));
+                } print(total);''')
+            with patch.dict(os.environ,{'MYRK_THREADS':'1','MYRK_TILE':'0'}):
+                expected=native(source)
+            for threads,tile in [(1,1),(1,7),(4,3),(4,2048)]:
+                with self.subTest(dtype=dtype,threads=threads,tile=tile), patch.dict(
+                        os.environ,{'MYRK_THREADS':str(threads),'MYRK_TILE':str(tile)}):
+                    actual=native(source)
+                    self.assertEqual((actual.returncode,actual.stdout),
+                                     (expected.returncode,expected.stdout),actual.stderr)
+
     def test_thread_configuration_is_validated(self):
         for value in ['0','-1','65','four','4x']:
             with self.subTest(value=value), patch.dict(os.environ,{'MYRK_THREADS':value}):

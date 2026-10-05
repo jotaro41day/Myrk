@@ -24,6 +24,25 @@ static void myrk_cpu_check(int error) {
         _Exit(70);
     }
 }
+/* Read once on the control thread; workers receive an immutable job field. */
+static int32_t myrk_cpu_tile(void) {
+    static int initialized=0;
+    static int32_t tile=0;
+    if (!initialized) {
+        const char *setting=getenv("MYRK_TILE");
+        if (setting) {
+            char *end; errno=0;
+            long value=strtol(setting,&end,10);
+            if (errno || !*setting || *end || value<0 || value>INT32_MAX) {
+                fputs("Myrk runtime error: MYRK_TILE must be an integer in [0,2147483647]\n",stderr);
+                exit(70);
+            }
+            tile=(int32_t)value;
+        }
+        initialized=1;
+    }
+    return tile;
+}
 static void *myrk_cpu_worker(void *arg) {
     const int id = *(int *)arg;
     uint64_t seen = 0;
