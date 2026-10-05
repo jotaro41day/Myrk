@@ -1,4 +1,5 @@
 import math
+import shutil
 import unittest
 from benchmarks.neuron.model_reference import DEFAULTS, declaration, initialize, step
 from benchmarks.neuron.reference import rounding
@@ -111,7 +112,8 @@ class ModelNative(unittest.TestCase):
         self.assertEqual(actual[0],expected[0]);self.assertAlmostEqual(actual[1],expected[1],places=8)
         with tempfile.TemporaryDirectory() as directory:
             binary=Path(directory)/'lif-reference'
-            subprocess.run([os.environ.get('CC') or 'cc','-std=c11','-O2','-fno-fast-math',
+            cc=os.environ.get('CC') or shutil.which('clang') or shutil.which('cc')
+            subprocess.run([cc,'-std=c11','-O2','-fno-fast-math',
                 '-ffp-contract=off',str(Path(__file__).resolve().parents[1]/'benchmarks/lif_reference.c'),
                 '-o',str(binary)],check=True,capture_output=True,text=True)
             spikes,checksum=subprocess.check_output([str(binary),str(neurons),str(steps)],text=True).split()

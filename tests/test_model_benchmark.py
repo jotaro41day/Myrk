@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -31,7 +32,7 @@ class OfficialModelBenchmarkTests(unittest.TestCase):
         from myrk.model_kernels import kernel
         def broken(model,dtype):
             return kernel(model,dtype).replace('next_v=old_v+dt*','next_v=old_v+2.0*dt*')
-        cc=os.environ.get('CC') or 'cc'
+        cc=os.environ.get('CC') or shutil.which('clang') or shutil.which('cc')
         with tempfile.TemporaryDirectory() as directory,patch('myrk.codegen_c.model_kernel',broken):
             binary,_=build_driver(Path(directory),'HH','f64',cc)
             with self.assertRaisesRegex(RuntimeError,'state mismatch'):
@@ -50,7 +51,8 @@ class OfficialModelBenchmarkTests(unittest.TestCase):
     def test_reference_has_same_hh_finite_state_failure_contract(self):
         from benchmarks.neuron.models import build_driver,checked,DEFAULTS
         with tempfile.TemporaryDirectory() as directory,patch.dict(DEFAULTS['HH'],{'dt':1000.0}):
-            binary,_=build_driver(Path(directory),'HH','f64',os.environ.get('CC') or 'cc')
+            cc=os.environ.get('CC') or shutil.which('clang') or shutil.which('cc')
+            binary,_=build_driver(Path(directory),'HH','f64',cc)
             for backend in ['myrk','c']:
                 with self.subTest(backend=backend), self.assertRaisesRegex(
                         RuntimeError,r'command failed \(70\).*nonfinite HH state'):
